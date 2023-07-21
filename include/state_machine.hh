@@ -84,7 +84,8 @@ public:
     ~PassListGenerator()
     {
         auto&& delete_lambda = [](char* ptr){ delete ptr; return nullptr; };
-        std::transform(action_space.begin(), action_space.end(), action_space.begin(), delete_lambda);
+        std::transform(swap.begin(), swap.begin() + MAX_PASS_AMOUNT, swap.begin(), delete_lambda);
+        std::transform(action_space.begin(), action_space.begin() + MAX_PASS_AMOUNT, action_space.begin(), delete_lambda);
         std::transform(loop_action_space.begin(), loop_action_space.end(), loop_action_space.begin(), delete_lambda);
     }
 

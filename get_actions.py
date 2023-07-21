@@ -35,10 +35,8 @@ if __name__ == "__main__":
     for line in file:
         action_space.append(line.strip())
 
-    print(action_space)
+    # print(action_space)
 
-
-    print ("the fun starts")
     for i in range (100):
         action_space = get_action_list(action_space, used, lib, 76079, 0)
         print("Action space:")

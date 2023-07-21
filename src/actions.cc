@@ -9,7 +9,6 @@ extern "C" char** get_new_action_space(const char** full_action_space,const char
 
     if (!initialized)
     {
-        std::cout << "Initiallizing" << std::endl;
         gcc_reorder::PassLogParser log_parser;
         gcc_reorder::PassToReorderParser pass_parser; 
         log_parser.parse_log("unique_passes.txt");
