@@ -1,0 +1,20 @@
+28
+crited 0 1 0
+pre 1 6 0
+loop 2 0 0
+vrp 0 0 1
+fre 0 0 1
+copyprop 1 0 1
+ccp 0 0 1
+dom 0 0 1
+dce 0 0 1
+ch 0 0 1
+phicprop 0 0 1
+thread 0 0 1
+veclower2 0 0 1
+cddce 0 0 1
+
+vrp 0 0 16
+dce 0 16 0
+fre 16 0 0
+

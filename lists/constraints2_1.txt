@@ -1,0 +1,11 @@
+3
+crited 0 0 1
+vrp 1 0 2
+fre 1 0 0
+copyprop 3 0 0
+ccp 1 0 0
+dom 1 0 0
+dce 1 0 0
+ch 1 0 0
+phicrop 1 0 0
+thread 1 0 0
