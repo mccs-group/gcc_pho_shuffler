@@ -28,18 +28,25 @@ if __name__ == "__main__":
     libname = pathlib.Path().absolute() / "actions.so"
     lib = setuplib(libname)
 
-    result = ["cprop", "pta", "alias", "loop"]
+    file = open("lists/to_shuffle2.txt")
+    action_space = []
     used = []
 
+    for line in file:
+        action_space.append(line.strip())
+
+    print(action_space)
+
+
     print ("the fun starts")
-    for i in range (1000):
-        result = get_action_list(result, used, lib, 552, 0)
-        # print("Action space:")
-        # print(result)
+    for i in range (100):
+        action_space = get_action_list(action_space, used, lib, 76079, 0)
+        print("Action space:")
+        print(action_space)
 
-        index = random.randrange(0, len(result))
-        # print(f"Index: {index}, len: {len(result) - 1}")
+        index = random.randrange(0, len(action_space))
+        print(f"Index: {index}, len: {len(action_space) - 1}")
 
-        # print("Used vec")
-        used.append(result[index])
-        # print(used)
+        print("Used vec")
+        used.append(action_space[index])
+        print(used)
