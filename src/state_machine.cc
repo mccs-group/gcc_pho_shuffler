@@ -31,7 +31,7 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
                 std::copy(full_action_space[i], full_action_space[i] + strlen(full_action_space[i]) + 1, swap[i]);
             }
 
-            swap.resize(size_full);
+            swapped_size = size_full;
             *size_ptr = loop_action_space.size();
             return loop_action_space.data();
         }
@@ -39,7 +39,7 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
         if (!std::strcmp(applied_passes[size_applied - 1], "loopdone"))
         {
             full_action_space = const_cast<const char**>(swap.data());
-            size_full = swap.size();
+            size_full = swapped_size;
         }
     }
 
