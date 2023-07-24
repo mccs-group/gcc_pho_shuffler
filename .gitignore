@@ -1,0 +1,6 @@
+*.so
+*log.txt
+.vscode
+obj/
+*info.txt
+**.swp
