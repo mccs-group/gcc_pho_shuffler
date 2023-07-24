@@ -114,49 +114,25 @@ public:
     template <typename iter>
     void set_list1(iter begin, iter end)
     {
-        list1.resize(end - begin);
-
-        for (int i = 0; begin != end; begin++, i++)
-        {
-            list1[i] = new char[MAX_PASS_LENGTH]{0};
-            std::copy(begin->begin(), begin->end(), list1[i]);
-        }
+        init_internal_vec(list1, begin, end);
     }
 
     template <typename iter>
     void set_list2(iter begin, iter end)
     {
-        list2.resize(end - begin);
-
-        for (int i = 0; begin != end; begin++, i++)
-        {
-            list2[i] = new char[MAX_PASS_LENGTH]{0};
-            std::copy(begin->begin(), begin->end(), list2[i]);
-        }
+        init_internal_vec(list2, begin, end);
     }
 
     template <typename iter>
     void set_list3(iter begin, iter end)
     {
-        list3.resize(end - begin);
-
-        for (int i = 0; begin != end; begin++, i++)
-        {
-            list3[i] = new char[MAX_PASS_LENGTH]{0};
-            std::copy(begin->begin(), begin->end(), list3[i]);
-        }
+        init_internal_vec(list3, begin, end);
     }
 
     template <typename iter>
     void set_list4_subpasses(iter begin, iter end)
     {
-        loop_action_space.resize(end - begin);
-
-        for (int i = 0; begin != end; begin++, i++)
-        {
-            loop_action_space[i] = new char[MAX_PASS_LENGTH]{0};
-            std::copy(begin->begin(), begin->end(), loop_action_space[i]);
-        }
+        init_internal_vec(loop_action_space, begin, end);
     }
 
     // map passes' names onto ids and batches of passes onto ids
@@ -168,6 +144,18 @@ public:
 private:
     char** get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr);
     char** get_action_space_helper(const char** full_action_space, int size_full, int original_state, int custom_state, size_t* size_ptr);
+
+    template <typename iter>
+    void init_internal_vec(std::vector<char**>& to_init, iter begin, iter end)
+    {
+        to_init.resize(end - begin);
+
+        for (int i = 0; begin != end; begin++, i++)
+        {
+            to_init[i] = new char[MAX_PASS_LENGTH]{0};
+            std::copy(begin->begin(), begin->end(), to_init[i]);
+        }
+    }
 };
 
 } // namespace gcc_reorder

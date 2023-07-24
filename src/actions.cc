@@ -35,10 +35,6 @@ extern "C" char** get_new_action_space(const char** full_action_space,const char
         // }
 
         gen.setup_structures();
-
-        // for (auto&& it : gen.info_vec_)
-        //     std::cout << it.name << ' ' << it.prop.original.required << ' ' << it.prop.original.provided << ' ' << it.prop.original.destroyed <<
-        //     ' ' << it.prop.custom.required << ' ' << it.prop.custom.provided << ' ' << it.prop.custom.destroyed << std::endl;
         initialized = true;
     }
 
