@@ -11,9 +11,10 @@ extern "C" char** get_new_action_space(const char** full_action_space,const char
         gcc_reorder::PassLogParser log_parser;
         gcc_reorder::PassToReorderParser pass_parser; 
         log_parser.parse_log("unique_passes.txt");
-        log_parser.parse_constraints("lists/constraints1.txt");
-        log_parser.parse_constraints("lists/constraints2.txt");
-        log_parser.parse_constraints("lists/constraints3.txt");
+        std::vector constraints_vec = {"lists/constraints1.txt", "lists/constraints2.txt", "lists/constraints3.txt"};
+        for (auto&& it : constraints_vec)
+            log_parser.parse_constraints(it);
+
         gen.set_info_vec(log_parser.begin(), log_parser.end());
 
         pass_parser.parse_passes_file("lists/to_shuffle1.txt");

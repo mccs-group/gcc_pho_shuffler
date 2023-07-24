@@ -82,7 +82,7 @@ public:
 
     PassListGenerator() : action_space(MAX_PASS_AMOUNT, 0), swap(MAX_PASS_AMOUNT, 0)
     {
-        auto&& allocate = [](char* ptr){ ptr = new char[MAX_PASS_LENGTH]{0}; return ptr; };
+        auto&& allocate = [](char* ptr){ return new char[MAX_PASS_LENGTH]{0}; };
         std::transform(action_space.begin(), action_space.end(), action_space.begin(), allocate);
         std::transform(swap.begin(), swap.end(), swap.begin(), allocate);
     }
@@ -146,7 +146,7 @@ private:
     char** get_action_space_helper(const char** full_action_space, int size_full, int original_state, int custom_state, size_t* size_ptr);
 
     template <typename iter>
-    void init_internal_vec(std::vector<char**>& to_init, iter begin, iter end)
+    void init_internal_vec(std::vector<char*>& to_init, iter begin, iter end)
     {
         to_init.resize(end - begin);
 
