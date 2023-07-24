@@ -11,7 +11,7 @@ def make_list(arr, size):
 
 def setuplib(name : pathlib.Path):
     lib = ctypes.CDLL(str(libname))
-    lib.get_new_action_space.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, 
+    lib.get_new_action_space.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32,
                                             ctypes.c_int32, ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
 
     lib.get_new_action_space.restype = ctypes.POINTER(ctypes.c_char_p)

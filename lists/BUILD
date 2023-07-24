@@ -1,0 +1,4 @@
+filegroup(
+        name = "lists",
+        srsc = ["./*"],
+)
