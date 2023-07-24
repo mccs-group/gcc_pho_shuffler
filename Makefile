@@ -12,18 +12,21 @@ OBJECTS = $(SOURCES:.cc=.o)
 OBJ_DIR = obj
 OBJ := $(addprefix $(OBJ_DIR)/, $(OBJECTS))
 
-EXEC = actions.so
+DLL = actions.so
 
 .PHONY: 
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(EXEC): $(OBJ)
-	$(CXX) -shared $(CXXFLAGS) $(OBJ) -o $(EXEC)
+$(DLL): $(OBJ)
+	$(CXX) -shared $(CXXFLAGS) $(OBJ) -o $(DLL)
 
-run:
+run: $(DLL)
 	python3 get_actions.py
+
+test: $(DLL) src/test.cc
+	$(CXX) $(CXXFLAGS) -Wno-sign-compare $(SRC_DIR)/test.cc $(SRC) -o test
 
 $(OBJ_DIR)/file_parsing.o: src/file_parsing.cc include/file_parsing.hh include/utilities.hh
 

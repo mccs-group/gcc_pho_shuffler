@@ -66,10 +66,14 @@ class PassListGenerator
 
     PropertyStateMachine state;
     std::vector<char*> action_space;
-    std::vector<char*> loop_action_space;
 
     std::vector<char*> swap;
     size_t swapped_size = 0;
+
+    std::vector<char*> list1;
+    std::vector<char*> list2;
+    std::vector<char*> list3;
+    std::vector<char*> loop_action_space;
 
 public:
 
@@ -78,15 +82,20 @@ public:
 
     PassListGenerator() : action_space(MAX_PASS_AMOUNT, 0), swap(MAX_PASS_AMOUNT, 0)
     {
-        std::transform(action_space.begin(), action_space.end(), action_space.begin(), [](char* ptr){ return ptr = new char[MAX_PASS_LENGTH]{0}; });
-        std::transform(swap.begin(), swap.end(), swap.begin(), [](char* ptr){ return ptr = new char[MAX_PASS_LENGTH]{0}; });
+        auto&& allocate = [](char* ptr){ ptr = new char[MAX_PASS_LENGTH]{0}; return ptr; };
+        std::transform(action_space.begin(), action_space.end(), action_space.begin(), allocate);
+        std::transform(swap.begin(), swap.end(), swap.begin(), allocate);
     }
 
     ~PassListGenerator()
     {
         auto&& delete_lambda = [](char* ptr){ delete ptr; return nullptr; };
-        std::transform(swap.begin(), swap.end(), swap.begin(), delete_lambda);
         std::transform(action_space.begin(), action_space.end(), action_space.begin(), delete_lambda);
+        std::transform(swap.begin(), swap.end(), swap.begin(), delete_lambda);
+
+        std::transform(list1.begin(), list1.end(), list1.begin(), delete_lambda);
+        std::transform(list2.begin(), list2.end(), list2.begin(), delete_lambda);
+        std::transform(list3.begin(), list3.end(), list3.begin(), delete_lambda);
         std::transform(loop_action_space.begin(), loop_action_space.end(), loop_action_space.begin(), delete_lambda);
     }
 
@@ -100,6 +109,42 @@ public:
     void set_info_vec(iter begin, iter end)
     {
         info_vec_ = {begin, end};
+    }
+
+    template <typename iter>
+    void set_list1(iter begin, iter end)
+    {
+        list1.resize(end - begin);
+
+        for (int i = 0; begin != end; begin++, i++)
+        {
+            list1[i] = new char[MAX_PASS_LENGTH]{0};
+            std::copy(begin->begin(), begin->end(), list1[i]);
+        }
+    }
+
+    template <typename iter>
+    void set_list2(iter begin, iter end)
+    {
+        list2.resize(end - begin);
+
+        for (int i = 0; begin != end; begin++, i++)
+        {
+            list2[i] = new char[MAX_PASS_LENGTH]{0};
+            std::copy(begin->begin(), begin->end(), list2[i]);
+        }
+    }
+
+    template <typename iter>
+    void set_list3(iter begin, iter end)
+    {
+        list3.resize(end - begin);
+
+        for (int i = 0; begin != end; begin++, i++)
+        {
+            list3[i] = new char[MAX_PASS_LENGTH]{0};
+            std::copy(begin->begin(), begin->end(), list3[i]);
+        }
     }
 
     template <typename iter>
@@ -119,6 +164,10 @@ public:
 
     char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full, int size_applied,
                                 int original_start_state, int custom_start_state, size_t* size_ptr);
+
+private:
+    char** get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr);
+    char** get_action_space_helper(const char** full_action_space, int size_full, int original_state, int custom_state, size_t* size_ptr);
 };
 
 } // namespace gcc_reorder

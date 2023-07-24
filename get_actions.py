@@ -1,6 +1,7 @@
 import ctypes
 import pathlib
 import random
+import time
 
 def make_c_array(lst):
     return (ctypes.c_char_p * len(lst))(*[x.encode() for x in lst])
@@ -8,8 +9,8 @@ def make_c_array(lst):
 def make_list(arr, size):
     return [elem.decode() for elem in arr[:size.value]]
 
-def setuplib(name):
-    lib = ctypes.CDLL(libname)
+def setuplib(name : pathlib.Path):
+    lib = ctypes.CDLL(str(libname))
     lib.get_new_action_space.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, 
                                             ctypes.c_int32, ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
 
@@ -35,16 +36,24 @@ if __name__ == "__main__":
     for line in file:
         action_space.append(line.strip())
 
+    # print("Starting Action space:")
     # print(action_space)
 
-    for i in range (100):
-        action_space = get_action_list(action_space, used, lib, 76079, 0)
-        print("Action space:")
-        print(action_space)
+    # print(action_space)
+    vec_len = 100
+
+    # start = time.time()
+    for i in range (vec_len):
+        action_space = get_action_list(action_space, used, lib, 76079, 2)
+        # print("Action space:")
+        # print(action_space)
 
         index = random.randrange(0, len(action_space))
-        print(f"Index: {index}, len: {len(action_space) - 1}")
+        # print(f"Taken: {action_space[index]}, Index: {index}, len: {len(action_space) - 1}")
 
-        print("Used vec")
+        # print("Used vec")
         used.append(action_space[index])
-        print(used)
+        # print(used)
+
+    # end = time.time()
+    # print(end - start)
