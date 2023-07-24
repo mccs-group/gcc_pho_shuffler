@@ -17,6 +17,30 @@ void PassListGenerator::setup_structures()
     }
 
     state.num_to_prop_ = pass_to_properties_;
+
+    for (auto&& it : list1)
+    {
+        // std::cout << std::string{it} << std::endl;
+        pass_to_list_num[it] = 1;
+    }
+
+    for (auto&& it : list2)
+    {
+        // std::cout << std::string{it} << std::endl;
+        pass_to_list_num[it] = 2;
+    }
+
+    for (auto&& it : list3)
+    {
+        // std::cout << std::string{it} << std::endl;
+        pass_to_list_num[it] = 3;
+    }
+
+    for (auto&& it : loop_action_space)
+    {
+        // std::cout << std::string{it} << std::endl;
+        pass_to_list_num[it] = 2;
+    }
 }
 
 char** PassListGenerator::get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr)
@@ -91,5 +115,9 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
     return get_action_space_helper(full_action_space, size_full, original_state, custom_state, size_ptr);
 }
 
+int PassListGenerator::get_pass_list(char* pass_name)
+{
+    return pass_to_list_num.at(std::string{pass_name});
+}
 
 } // namespace gcc_reorder

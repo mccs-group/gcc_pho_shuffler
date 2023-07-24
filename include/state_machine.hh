@@ -64,6 +64,8 @@ class PassListGenerator
 
     std::unordered_map<int, pass_prop> pass_to_properties_; // hash map: pass id -> it's properties
 
+    std::unordered_map<std::string, int> pass_to_list_num;
+
     PropertyStateMachine state;
     std::vector<char*> action_space;
 
@@ -140,6 +142,8 @@ public:
 
     char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full, int size_applied,
                                 int original_start_state, int custom_start_state, size_t* size_ptr);
+
+    int get_pass_list(char* pass_name);
 
 private:
     char** get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr);

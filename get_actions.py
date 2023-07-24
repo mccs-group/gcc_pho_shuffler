@@ -16,7 +16,13 @@ def setuplib(name : pathlib.Path):
 
     lib.get_new_action_space.restype = ctypes.POINTER(ctypes.c_char_p)
 
+    lib.get_pass_list.argtypes = [ctypes.c_char_p]
+    lib.get_pass_list.restype = ctypes.c_int32
+
     return lib
+
+def get_pass_list(name : str, lib):
+    return int(lib.get_pass_list(name.encode()))
 
 def get_action_list(old_action_list, used_actions, libactions, start_prop, end_prop):
     size = ctypes.c_size_t()
@@ -25,6 +31,8 @@ def get_action_list(old_action_list, used_actions, libactions, start_prop, end_p
     return make_list(new_action_byte_array, size)
 
 if __name__ == "__main__":
+
+    # Example
 
     libname = pathlib.Path().absolute() / "actions.so"
     lib = setuplib(libname)
@@ -36,14 +44,9 @@ if __name__ == "__main__":
     for line in file:
         action_space.append(line.strip())
 
-    # print("Starting Action space:")
-    # print(action_space)
+    used_vec_needed_length = 100
 
-    # print(action_space)
-    vec_len = 100
-
-    # start = time.time()
-    for i in range (vec_len):
+    for i in range (used_vec_needed_length):
         action_space = get_action_list(action_space, used, lib, 76079, 2)
         # print("Action space:")
         # print(action_space)
@@ -54,6 +57,3 @@ if __name__ == "__main__":
         # print("Used vec")
         used.append(action_space[index])
         # print(used)
-
-    # end = time.time()
-    # print(end - start)
