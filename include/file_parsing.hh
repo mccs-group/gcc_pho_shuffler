@@ -35,7 +35,7 @@ public:
     void parse_log(const std::string& info_file_name);
 
     // parses custom constraints about reordering passes and adds the received information into existing info_vec_ vector
-    std::pair<unsigned long, unsigned long> parse_constraints(const std::string& constraint_file_name);
+    std::pair<unsigned long, unsigned long> parse_constraints(const std::string& constraint_file_name, unsigned long start_custom_property);
 
     using iterator = std::vector<pass_info>::iterator;
     using const_iterator = std::vector<pass_info>::const_iterator;
@@ -48,6 +48,7 @@ public:
     const_iterator cend() { return info_vec_.cend(); }
 
 private:
+    void displace_bits(properties& prop, unsigned long displacement);
     // finds number, and return a pair of found number and iterator after position of number end
     template<typename iter>
     std::pair<unsigned long, std::string::const_iterator> find_number(iter begin, iter end)

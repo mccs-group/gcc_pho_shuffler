@@ -5,7 +5,7 @@ namespace gcc_reorder
 {
 
 // map passes' names onto ids and batches of passes onto ids
-void PassListGenerator::setup_structures()
+void PassListGenerator::setup_structures(const std::vector<std::pair<unsigned long, unsigned long>> & vec)
 {
     int i = 0;
 
@@ -18,22 +18,27 @@ void PassListGenerator::setup_structures()
 
     state.num_to_prop_ = pass_to_properties_;
 
+    all_lists.reserve(list1.size() + list2.size() + list3.size());
+
     for (auto&& it : list1)
     {
         // std::cout << std::string{it} << std::endl;
         pass_to_list_num[it] = 1;
+        all_lists.push_back(it);
     }
 
     for (auto&& it : list2)
     {
         // std::cout << std::string{it} << std::endl;
         pass_to_list_num[it] = 2;
+        all_lists.push_back(it);
     }
 
     for (auto&& it : list3)
     {
         // std::cout << std::string{it} << std::endl;
         pass_to_list_num[it] = 3;
+        all_lists.push_back(it);
     }
 
     for (auto&& it : loop_action_space)
@@ -41,49 +46,51 @@ void PassListGenerator::setup_structures()
         // std::cout << std::string{it} << std::endl;
         pass_to_list_num[it] = 2;
     }
+
+    add_list_ordering(vec);
 }
 
-char** PassListGenerator::get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr)
+void PassListGenerator::add_list_ordering(const std::vector<std::pair<unsigned long, unsigned long>>& vec)
 {
-    std::copy(list1.begin(), list1.end(), action_space.begin());
-    std::copy(list2.begin(), list2.end(), action_space.begin() + list1.size());
-    std::copy(list3.begin(), list3.end(), action_space.begin() + list1.size() + list2.size());
-
-    *size_ptr = list1.size() + list2.size() + list3.size();
-
-    return action_space.data();
-}
-
-char** PassListGenerator::get_action_space_helper(const char** full_action_space, int size_full, int original_state, int custom_state, size_t* size_ptr)
-{
-    int new_size = 0;
-    for (int i = 0; i < size_full; i++)
+    for (auto&& it : info_vec_)
     {
-        auto&& both_props = pass_to_properties_[name_to_id_map_.at(std::string(full_action_space[i]))];
-
-        auto&& original_required = both_props.original.required;
-        auto&& custom_required = both_props.custom.required;
-
-        if (((original_required & original_state) == original_required) && ((custom_required & custom_state) == custom_required))
-        {
-            std::copy(full_action_space[i], full_action_space[i] + strlen(full_action_space[i]) + 1, action_space[new_size++]);
-        }
+        if (pass_to_list_num.find(it.name) != pass_to_list_num.end())
+            it.prop.custom.required |= vec[pass_to_list_num.at(it.name) - 1].second;
     }
-    *size_ptr = new_size;
 
-    return action_space.data();
+    start_properties[1].second = vec[0].first;
+
+    start_properties[2].second = vec[1].first | vec[0].second;
+    start_properties[3].second = vec[2].first | vec[0].second | vec[1].second;
+
+    for (int i = 1; i < 4; i++)
+        start_properties[0].second |= start_properties[i].second;
+
+}
+
+int PassListGenerator::valid_pass_seq(char** pass_seq, int size, int list_num)
+{
+    state.original_property_state = start_properties[list_num].first;
+    state.custom_property_state = start_properties[list_num].second;
+
+    char** bad = std::find_if(pass_seq, pass_seq + size, [this](char* str){ return state.apply_pass(name_to_id_map_[std::string{str}]) != 0;});
+
+    if (bad != pass_seq + size)
+    {
+        return bad - pass_seq + 1;
+    }
+    else
+        return 0;
 }
 
 char** PassListGenerator::get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full,
-                                               int size_applied, int original_start_state, int custom_start_state, size_t* size_ptr)
+                                               int size_applied, int list_num, size_t* size_ptr)
 {
 
-    if ((size_applied == 0) && (size_full == 0))
-        return get_starting_action_space(original_start_state, custom_start_state, size_ptr);
-
     state.passes_.clear();
-    state.original_property_state = original_start_state;
-    state.custom_property_state = custom_start_state;
+    state.original_property_state = start_properties[list_num].first;
+    state.custom_property_state = start_properties[list_num].second;
+
     for (int i = 0; i < size_applied; i++)
     {
         state.apply_pass(name_to_id_map_[applied_passes[i]]);
@@ -92,27 +99,54 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
     const auto original_state = state.original_property_state;
     const auto custom_state = state.custom_property_state;
 
+    // std::cout << "state" << std::endl;
+    // std::cout << original_state << ' ' << custom_state << std::endl;
+
     if (size_applied > 0)
     {
-        if (!std::strcmp(applied_passes[size_applied - 1], "loop") || !std::strcmp(applied_passes[size_applied - 1], "loopinit"))
+        if (!std::strcmp(applied_passes[size_applied - 1], "fix_loops"))
         {
-            for (int i = 0; i < size_full; i++)
-            {
-                std::copy(full_action_space[i], full_action_space[i] + strlen(full_action_space[i]) + 1, swap[i]);
-            }
-            swapped_size = size_full;
-
-            return get_action_space_helper(const_cast<const char**>(loop_action_space.data()), loop_action_space.size(), original_state, custom_state, size_ptr);
+            const char* loop = "loop";
+            std::copy(loop, loop + strlen(loop) + 1, action_space[0]);
+            *size_ptr = 1;
+            return action_space.data();
         }
+        if (!std::strcmp(applied_passes[size_applied - 1], "loop"))
+        {
+            const char* loopinit = "loopinit";
+            std::copy(loopinit, loopinit + strlen(loopinit) + 1, action_space[0]);
+            *size_ptr = 1;
+            return action_space.data();
+        }
+
+        if (!std::strcmp(applied_passes[size_applied - 1], "loopinit"))
+            in_loop = true;
 
         if (!std::strcmp(applied_passes[size_applied - 1], "loopdone"))
-        {
-            full_action_space = const_cast<const char**>(swap.data());
-            size_full = swapped_size;
-        }
+            in_loop = false;
     }
 
-    return get_action_space_helper(full_action_space, size_full, original_state, custom_state, size_ptr);
+    if(in_loop)
+        return get_action_space_helper(loop_action_space.begin(), loop_action_space.end(), original_state, custom_state, size_ptr);
+
+    switch (list_num)
+    {
+        case 1:
+                return get_action_space_helper(list1.begin(), list1.end(), original_state, custom_state, size_ptr);
+                break;
+        case 2:
+                return get_action_space_helper(list2.begin(), list2.end(), original_state, custom_state, size_ptr);
+                break;
+        case 3:
+                return get_action_space_helper(list3.begin(), list3.end(), original_state, custom_state, size_ptr);
+                break;
+        case 0: return get_action_space_helper(all_lists.begin(), all_lists.end(), original_state, custom_state, size_ptr);
+                break;
+        default:
+                std::cerr << "Unknown list num " << list_num << std::endl;
+                *size_ptr = 0;
+                return nullptr;
+    }
 }
 
 int PassListGenerator::get_pass_list(char* pass_name)

@@ -14,6 +14,10 @@ thread 0 0 1
 veclower2 0 0 1
 cddce 0 0 1
 
+fix_loops 2 32 0
+loop 32 0 0
+loopdone 0 0 32
+
 vrp 0 0 16
 dce 0 16 0
 fre 16 0 0

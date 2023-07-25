@@ -66,34 +66,36 @@ class PassListGenerator
 
     std::unordered_map<std::string, int> pass_to_list_num;
 
+    std::vector<std::pair<unsigned long, unsigned long>> start_properties = { {76079 | 130760, 0}, {76079, 0}, {76079, 0}, {130760, 0} };
+
     PropertyStateMachine state;
     std::vector<char*> action_space;
 
-    std::vector<char*> swap;
-    size_t swapped_size = 0;
+    bool in_loop = false;
 
     std::vector<char*> list1;
     std::vector<char*> list2;
     std::vector<char*> list3;
+    std::vector<char*> all_lists;
     std::vector<char*> loop_action_space;
 
 public:
+    int starting_list = -1;
+    int current_list = -1;
 
     static constexpr int MAX_PASS_AMOUNT = 400;
     static constexpr int MAX_PASS_LENGTH = 40;
 
-    PassListGenerator() : action_space(MAX_PASS_AMOUNT, 0), swap(MAX_PASS_AMOUNT, 0)
+    PassListGenerator() : action_space(MAX_PASS_AMOUNT, 0)
     {
         auto&& allocate = [](char* ptr){ return new char[MAX_PASS_LENGTH]{0}; };
         std::transform(action_space.begin(), action_space.end(), action_space.begin(), allocate);
-        std::transform(swap.begin(), swap.end(), swap.begin(), allocate);
     }
 
     ~PassListGenerator()
     {
         auto&& delete_lambda = [](char* ptr){ delete ptr; return nullptr; };
         std::transform(action_space.begin(), action_space.end(), action_space.begin(), delete_lambda);
-        std::transform(swap.begin(), swap.end(), swap.begin(), delete_lambda);
 
         std::transform(list1.begin(), list1.end(), list1.begin(), delete_lambda);
         std::transform(list2.begin(), list2.end(), list2.begin(), delete_lambda);
@@ -102,9 +104,10 @@ public:
     }
 
     template <typename iter_info>
-    PassListGenerator(iter_info begin_info, iter_info end_info) : info_vec_{begin_info, end_info}
+    PassListGenerator(iter_info begin_info, iter_info end_info, const std::vector<std::pair<unsigned long, unsigned long>>& vec) :
+    info_vec_{begin_info, end_info}
     {
-        setup_structures();
+        setup_structures(vec);
     }
 
     template <typename iter>
@@ -138,16 +141,43 @@ public:
     }
 
     // map passes' names onto ids and batches of passes onto ids
-    void setup_structures();
+    void setup_structures(const std::vector<std::pair<unsigned long, unsigned long>>& vec);
 
-    char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full, int size_applied,
-                                int original_start_state, int custom_start_state, size_t* size_ptr);
+    void add_list_ordering(const std::vector<std::pair<unsigned long, unsigned long>>& vec);
+
+    char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full,
+                                int size_applied, int list_num, size_t* size_ptr);
+
+    int valid_pass_seq(char** pass_seq, int size, int list_num);
 
     int get_pass_list(char* pass_name);
 
 private:
-    char** get_starting_action_space(int original_start_state, int custom_start_state, size_t* size_ptr);
-    char** get_action_space_helper(const char** full_action_space, int size_full, int original_state, int custom_state, size_t* size_ptr);
+
+    template<typename iter>
+    char** get_action_space_helper(iter begin, iter end, int original_state, int custom_state, size_t* size_ptr)
+    {
+        int new_size = 0;
+        // std::cout << "State: " << ' ' << original_state << ' ' << custom_state << std::endl;
+        for (; begin != end; begin++)
+        {
+            auto&& both_props = pass_to_properties_[name_to_id_map_.at(std::string(*begin))];
+
+            auto&& original_required = both_props.original.required;
+            auto&& custom_required = both_props.custom.required;
+
+            // std::cout << "Checking " << std::string(*begin) << "with " << original_required << ' ' << custom_required << std::endl;
+
+            if (((original_required & original_state) == original_required) && ((custom_required & custom_state) == custom_required))
+            {
+                std::copy(*begin, *begin + strlen(*begin) + 1, action_space[new_size++]);
+            }
+
+        }
+        *size_ptr = new_size;
+
+        return action_space.data();
+    }
 
     template <typename iter>
     void init_internal_vec(std::vector<char*>& to_init, iter begin, iter end)

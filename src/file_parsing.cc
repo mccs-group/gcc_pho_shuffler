@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "file_parsing.hh"
 
 namespace gcc_reorder
@@ -42,7 +44,14 @@ void PassLogParser::parse_log(const std::string& info_file_name)
     return;
 }
 
-std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const std::string& constraint_file_name)
+void PassLogParser::displace_bits(properties& prop, unsigned long displacement)
+{
+    prop.required = prop.required << displacement;
+    prop.provided = prop.provided << displacement;
+    prop.destroyed = prop.destroyed << displacement;
+}
+
+std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const std::string& constraint_file_name, unsigned long start_custom_property)
 {
     try
     {
@@ -53,6 +62,12 @@ std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const s
         std::cerr << "Warning! Could not open file " << constraint_file_name << " to get constraints info" << std::endl;
         return {0, 0};
     }
+
+    std::filesystem::path path_to_file{constraint_file_name};
+    auto&& file_name = std::string{path_to_file.filename()};
+    auto&& list_num = *std::find_if(file_name.begin(), file_name.end(), [](char c){return std::isdigit(c);} ) - '0';
+
+    unsigned long bit_displacement = (list_num - 1) * 20;
 
     if (file_content_buf.empty())
         return {0, 0};
@@ -72,7 +87,7 @@ std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const s
     it = ++it_and_start_state.second;
 
 
-    unsigned long starting_state = it_and_start_state.first;
+    unsigned long starting_state = it_and_start_state.first << bit_displacement;
     unsigned long ending_state = 0;
     for (; (it != file_content_buf.cend()) && (second_it != file_content_buf.cend()); it++)
     {
@@ -88,15 +103,18 @@ std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const s
         second_it = std::find(it, file_content_buf.cend(), '\n');
 
         auto&&[pass_name, prop] = get_single_pass_info(it, second_it);
+        displace_bits(prop, bit_displacement);
+
         if (pass_name == "end_state")
         {
-            ending_state = prop.required;
+            ending_state = prop.required << bit_displacement;
             it = std::find(it, file_content_buf.cend(), '\n');
             continue;
         }
 
         auto&& to_fill_constraint_it = std::find_if(info_vec_.begin(), info_vec_.end(), [&name = pass_name](const pass_info& info){ return name == info.name;});
 
+        to_fill_constraint_it->prop.custom.required  |= start_custom_property;
         to_fill_constraint_it->prop.custom.required  |= prop.required;
         to_fill_constraint_it->prop.custom.provided  |= prop.provided;
         to_fill_constraint_it->prop.custom.provided  &= ~prop.destroyed;
