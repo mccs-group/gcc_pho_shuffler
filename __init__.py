@@ -13,7 +13,7 @@ def make_list(arr, size):
 
 # returns a lib object, which is necessary for the rest of the functions
 def setuplib(name : pathlib.Path):
-    lib = ctypes.CDLL(str(libname))
+    lib = ctypes.CDLL(str(name))
     lib.get_new_action_space.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32,
                                             ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
 
