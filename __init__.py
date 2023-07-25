@@ -27,7 +27,7 @@ def setuplib(name : pathlib.Path):
 
     return lib
 
-def get_pass_list(name : str, lib):
+def get_pass_list(lib, name : str):
     return int(lib.get_pass_list(name.encode()))
 
 
