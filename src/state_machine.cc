@@ -164,6 +164,9 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
 
 int PassListGenerator::get_pass_list(char* pass_name)
 {
+    if (pass_to_list_num.find(pass_name) == pass_to_list_num.end())
+        return -1;
+
     return pass_to_list_num.at(std::string{pass_name});
 }
 
