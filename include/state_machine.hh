@@ -67,7 +67,7 @@ class PassListGenerator
     std::unordered_map<std::string, int> pass_to_list_num;
 
     std::vector<std::pair<unsigned long, unsigned long>> start_properties = { {76079 | 130760, 0}, {76079, 0}, {76079, 0}, {130760, 0} };
-    // std::vector<std::pair<unsigned long, unsigned long>> end_properties = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
+    std::vector<std::pair<unsigned long, unsigned long>> end_properties = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
 
     PropertyStateMachine state;
     std::vector<char*> action_space;

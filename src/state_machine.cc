@@ -74,8 +74,10 @@ void PassListGenerator::change_list(const std::vector<std::pair<unsigned long, u
     for (int j = 0; j < 3; j++)
     {
         start_properties[j + 1].second = start_end_prop[j].first;
+        end_properties[j + 1].second = start_end_prop[j].second;
         start_properties[0].second |= start_properties[j + 1].second;
     }
+    end_properties[0].second = end_properties[3].second;
 
 }
 
@@ -91,10 +93,10 @@ int PassListGenerator::valid_pass_seq(char** pass_seq, int size, int list_num)
         return bad - pass_seq + 1;
     }
 
-    // if (state.custom_property_state != )
+    if ((state.custom_property_state & end_properties[list_num].second) != end_properties[list_num].second)
+        return size;
 
-    // else
-        return 0;
+    return 0;
 }
 
 char** PassListGenerator::get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full,
