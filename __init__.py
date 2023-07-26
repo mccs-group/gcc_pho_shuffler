@@ -25,6 +25,9 @@ def setuplib(name : pathlib.Path):
     lib.valid_pass_seq.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, ctypes.c_int32]
     lib.valid_pass_seq.restype = ctypes.c_int32
 
+    lib.make_valid_pass_seq.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
+    lib.make_valid_pass_seq.restype = ctypes.POINTER(ctypes.c_char_p)
+
     return lib
 
 def get_pass_list(lib, name : str):
@@ -44,6 +47,10 @@ def get_action_list(libactions, old_action_list, used_actions, list_num):
 # return 0 if ok, a number of failed pass
 def valid_pass_seq(lib, lst, list_num):
     return int(lib.valid_pass_seq(make_c_array(lst), len(lst), list_num))
+
+def make_valid_pass_seq(lib, lst, list_num):
+    size = ctypes.c_size_t()
+    return make_list(lib.make_valid_pass_seq(make_c_array(lst), len(lst), list_num, ctypes.byref(size)), size)
 
 if __name__ == "__main__":
 
@@ -85,3 +92,7 @@ if __name__ == "__main__":
     # print("Validation")
     # print(len(used))
     # print(valid_pass_seq(lib, used, list_num))
+
+    used = ["evrp"]
+    print(valid_pass_seq(lib, used, 1))
+    print(make_valid_pass_seq(lib, used, 1))

@@ -53,6 +53,19 @@ struct PropertyStateMachine
         return 0;
     }
 
+       int revert_applying(int pass)
+    {
+        pass_prop pass_prop = num_to_prop_.at(pass);
+
+        custom_property_state |= pass_prop.custom.destroyed;
+        custom_property_state &= ~pass_prop.custom.provided;
+
+        original_property_state |= pass_prop.original.destroyed;
+        original_property_state &= ~pass_prop.original.provided;
+
+        return 0;
+    }
+
 };
 
 
@@ -150,6 +163,7 @@ public:
                                 int size_applied, int list_num, size_t* size_ptr);
 
     int valid_pass_seq(char** pass_seq, int size, int list_num);
+    char** make_valid_pass_seq(char** pass_seq, int size, int list_num, size_t* size_ptr);
 
     int get_pass_list(char* pass_name);
 

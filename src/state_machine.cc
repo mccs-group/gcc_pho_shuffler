@@ -1,6 +1,8 @@
 #include "state_machine.hh"
 #include "file_parsing.hh"
 
+#include <stack>
+
 namespace gcc_reorder
 {
 
@@ -97,6 +99,43 @@ int PassListGenerator::valid_pass_seq(char** pass_seq, int size, int list_num)
         return size;
 
     return 0;
+}
+
+char** PassListGenerator::make_valid_pass_seq(char** pass_seq, int size, int list_num, size_t* size_ptr)
+{
+    state.original_property_state = start_properties[list_num].first;
+    state.custom_property_state = start_properties[list_num].second;
+
+    for (int i = 0; i < size; i++)
+    {
+        std::copy(pass_seq[i], pass_seq[i] + strlen(pass_seq[i]) + 1, action_space[i]);
+        state.apply_pass(name_to_id_map_[pass_seq[i]]);
+    }
+
+    std::stack<const char*> passes;
+
+    auto ending_state_diff = end_properties[list_num].second & (~state.custom_property_state);
+    auto&& necessary_pass_finder = [&ending_state_diff](const pass_info& info){return (info.prop.custom.provided & ending_state_diff) == ending_state_diff && 
+                                                                                        (info.prop.custom.destroyed & ending_state_diff) != ending_state_diff;};
+
+    while (ending_state_diff != 0)
+    {
+        auto&& pass_info_it = std::find_if(info_vec_.begin(), info_vec_.end(), necessary_pass_finder);
+        passes.push(pass_info_it->name.c_str());
+
+        ending_state_diff = pass_info_it->prop.custom.required & (~state.custom_property_state);
+    }
+
+    *size_ptr = size + passes.size();
+
+    for (int i = 0; !passes.empty(); i++)
+    {
+        auto&& to_copy_from = passes.top();
+        std::copy(to_copy_from, to_copy_from + strlen(to_copy_from) + 1, action_space[size + i]);
+        passes.pop();
+    }
+
+    return action_space.data();
 }
 
 char** PassListGenerator::get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full,
