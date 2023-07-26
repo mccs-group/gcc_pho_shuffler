@@ -11,4 +11,6 @@ extern "C" int get_pass_list(char* pass_name);
 
 extern "C" int valid_pass_seq(char** pass_seq, int size, int list_num);
 
+extern "C" char** make_valid_pass_seq(char** pass_seq, int size, int list_num);
+
 #endif

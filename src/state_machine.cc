@@ -5,7 +5,7 @@ namespace gcc_reorder
 {
 
 // map passes' names onto ids and batches of passes onto ids
-void PassListGenerator::setup_structures(const std::vector<std::pair<unsigned long, unsigned long>> & vec)
+void PassListGenerator::setup_structures()
 {
     int i = 0;
 
@@ -16,7 +16,11 @@ void PassListGenerator::setup_structures(const std::vector<std::pair<unsigned lo
         pass_to_properties_[i] = it->prop;
     }
 
-    state.num_to_prop_ = pass_to_properties_;
+    // std::cerr << pass_to_properties_[name_to_id_map_["widening_mul"]].custom.required << std::endl;
+
+
+    if (!all_lists.empty())
+        return;
 
     all_lists.reserve(list1.size() + list2.size() + list3.size());
 
@@ -46,25 +50,32 @@ void PassListGenerator::setup_structures(const std::vector<std::pair<unsigned lo
         // std::cout << std::string{it} << std::endl;
         pass_to_list_num[it] = 2;
     }
-
-    add_list_ordering(vec);
 }
 
-void PassListGenerator::add_list_ordering(const std::vector<std::pair<unsigned long, unsigned long>>& vec)
+void PassListGenerator::change_list(const std::vector<std::pair<unsigned long, unsigned long>>& start_end_prop)
 {
+    state.num_to_prop_ = pass_to_properties_;
+
     for (auto&& it : info_vec_)
     {
         if (pass_to_list_num.find(it.name) != pass_to_list_num.end())
-            it.prop.custom.required |= vec[pass_to_list_num.at(it.name) - 1].second;
+            for (int j = 0; j < pass_to_list_num.at(it.name) - 1; j++)
+            {
+                // std::cout << "Adding to " << it.name << ' ' << start_end_prop[j].second <<  std::endl;
+                it.prop.custom.required |= start_end_prop[j].second;
+            }
     }
 
-    start_properties[1].second = vec[0].first;
+    for (auto&& it : info_vec_)
+    {
+        pass_to_properties_[name_to_id_map_.at(it.name)] = it.prop;
+    }
 
-    start_properties[2].second = vec[1].first | vec[0].second;
-    start_properties[3].second = vec[2].first | vec[0].second | vec[1].second;
-
-    for (int i = 1; i < 4; i++)
-        start_properties[0].second |= start_properties[i].second;
+    for (int j = 0; j < 3; j++)
+    {
+        start_properties[j + 1].second = start_end_prop[j].first;
+        start_properties[0].second |= start_properties[j + 1].second;
+    }
 
 }
 
@@ -79,7 +90,10 @@ int PassListGenerator::valid_pass_seq(char** pass_seq, int size, int list_num)
     {
         return bad - pass_seq + 1;
     }
-    else
+
+    // if (state.custom_property_state != )
+
+    // else
         return 0;
 }
 
@@ -98,9 +112,6 @@ char** PassListGenerator::get_new_action_space(const char** full_action_space, c
 
     const auto original_state = state.original_property_state;
     const auto custom_state = state.custom_property_state;
-
-    // std::cout << "state" << std::endl;
-    // std::cout << original_state << ' ' << custom_state << std::endl;
 
     if (size_applied > 0)
     {

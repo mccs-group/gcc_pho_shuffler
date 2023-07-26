@@ -3,22 +3,21 @@
 gcc_reorder::PassListGenerator gen;
 
 
-std::vector<std::pair<unsigned long, unsigned long>>  set_info_vec(int list_num)
+void set_info_vec(int list_num)
 {
     gcc_reorder::PassLogParser log_parser;
     log_parser.parse_log("../shuffler/unique_passes.txt");
     std::vector constraints_vec = {"../shuffler/lists/constraints1.txt", "../shuffler/lists/constraints2.txt", "../shuffler/lists/constraints3.txt"};
     std::vector<std::pair<unsigned long, unsigned long>> start_prop(3, {0, 0});
 
+    unsigned long custom_ending_constraint = 0;
     if (list_num == 0)
     {
         int i = 0;
         for (auto&& it = constraints_vec.begin(); it != constraints_vec.end(); it++, i++)
         {
-            if (i == 0)
-                start_prop[i] = log_parser.parse_constraints(*it, 0);
-            else
-                start_prop[i] = log_parser.parse_constraints(*it, start_prop[i - 1].second);
+            start_prop[i] = log_parser.parse_constraints(*it, custom_ending_constraint);
+            custom_ending_constraint |= start_prop[i].second;
         }
     }
     else
@@ -36,7 +35,15 @@ std::vector<std::pair<unsigned long, unsigned long>>  set_info_vec(int list_num)
 
     gen.set_info_vec(log_parser.begin(), log_parser.end());
 
-    return start_prop;
+    // for (auto&& it : start_prop)
+    // {
+    //     std::cout << it.first << ' ' << it.second << std::endl;
+    // }
+
+    gen.setup_structures();
+    gen.change_list(start_prop);
+    gen.current_list = list_num;
+
 }
 
 void init(int list_num)
@@ -55,7 +62,7 @@ void init(int list_num)
     pass_parser.parse_passes_file("../shuffler/lists/to_shuffle4.txt");
     gen.set_list4_subpasses(pass_parser.begin(), pass_parser.end());
 
-    auto&& start_prop = set_info_vec(list_num);
+    set_info_vec(list_num);
 
     // std::cout << "in gen" << std::endl;
 
@@ -64,10 +71,7 @@ void init(int list_num)
     //     std::cout << it.name << ' ' << it.prop.original.required << ' ' << it.prop.original.provided << ' ' << it.prop.original.destroyed
     //     << ' ' << it.prop.custom.required << ' ' << it.prop.custom.provided << ' ' << it.prop.custom.destroyed << std::endl;
     // }
-
-    gen.setup_structures(start_prop);
     gen.starting_list = list_num;
-    gen.current_list = list_num;
 }
 
 
@@ -119,4 +123,18 @@ extern "C" int valid_pass_seq(char** pass_seq, int size, int list_num)
     }
 
     return gen.valid_pass_seq(pass_seq, size, list_num);
+}
+
+extern "C" char** make_valid_pass_seq(char** pass_seq, int size, int list_num)
+{
+    static bool initialized = false;
+
+    if (!initialized)
+    {
+        init(list_num);
+        initialized = true;
+    }
+
+    return nullptr;
+
 }
