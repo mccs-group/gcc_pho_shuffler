@@ -3,20 +3,20 @@
 namespace gcc_reorder
 {
 
-PassListGenAdapter::PassListGenAdapter()
+void PassListGenAdapter::setup()
 {
     PassToReorderParser pass_parser;
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle1.txt");
+    pass_parser.parse_passes_file(path_to_dir / "lists/to_shuffle1.txt");
     list1 = {pass_parser.begin(), pass_parser.end()};
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle2.txt");
+    pass_parser.parse_passes_file(path_to_dir / "lists/to_shuffle2.txt");
     list2 = {pass_parser.begin(), pass_parser.end()};
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle3.txt");
+    pass_parser.parse_passes_file(path_to_dir / "lists/to_shuffle3.txt");
     list3 = {pass_parser.begin(), pass_parser.end()};
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle4.txt");
+    pass_parser.parse_passes_file(path_to_dir / "lists/to_shuffle4.txt");
     loop_action_space = {pass_parser.begin(), pass_parser.end()};
 
     all_lists.reserve(list1.size() + list2.size() + list3.size());
@@ -54,8 +54,8 @@ PassListGenAdapter::PassListGenAdapter()
 
 void PassListGenAdapter::change_current_list_num(int list_num)
 {
-    log_parser.parse_log("../shuffler/unique_passes.txt");
-    std::vector constraints_vec = {"../shuffler/lists/constraints1.txt", "../shuffler/lists/constraints2.txt", "../shuffler/lists/constraints3.txt"};
+    log_parser.parse_log(path_to_dir / "unique_passes.txt");
+    std::vector constraints_vec = {path_to_dir / "lists/constraints1.txt", path_to_dir /  "lists/constraints2.txt", path_to_dir / "lists/constraints3.txt"};
 
     custom_properties = {0, 0};
     std::vector<unsigned long> ending_prop(3, 0);

@@ -1,6 +1,8 @@
 #ifndef ADAPTER_HH
 #define ADAPTER_HH
 
+#include <filesystem>
+
 #include "state_machine.hh"
 #include "file_parsing.hh"
 
@@ -19,6 +21,8 @@ class PassListGenAdapter
     std::vector<std::string> loop_action_space;
     std::vector<std::string> all_lists;
 
+    std::filesystem::path path_to_dir;
+
     std::vector<std::vector<char>> buf;
     std::vector<char*> buf_to_return;
 
@@ -30,8 +34,9 @@ class PassListGenAdapter
     bool in_loop = false;
 
 public:
-    PassListGenAdapter();
+    void setup();
 
+    void set_path_to_dir(const std::filesystem::path& path) { path_to_dir = path;}
 
     char** get_new_action_space(const char** applied_passes, int size_applied, int list_num, size_t* size_ptr);
 

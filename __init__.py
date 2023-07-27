@@ -28,6 +28,11 @@ def setuplib(name : pathlib.Path):
     lib.make_valid_pass_seq.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
     lib.make_valid_pass_seq.restype = ctypes.POINTER(ctypes.c_char_p)
 
+    lib.set_path.argtypes = [ctypes.c_char_p]
+    lib.set_path.restype = None
+
+    lib.set_path(str(name).encode())
+
     return lib
 
 def get_pass_list(lib, name : str):
@@ -59,18 +64,13 @@ if __name__ == "__main__":
     libname = pathlib.Path().absolute() / "actions.so"
     lib = setuplib(libname)
 
-    file = open("lists/to_shuffle2.txt")
     action_space = []
     used = []
 
-    for line in file:
-        action_space.append(line.strip())
-
-    # print("Starting:")
-    # print(action_space)
     list_num = 2
 
     action_space = get_action_list(lib, action_space, used, list_num)
+    print(action_space)
 
     used_vec_needed_length = 100
 
