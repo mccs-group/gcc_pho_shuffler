@@ -7,12 +7,14 @@ cc_library(
                 "src/actions.cc",
                 "src/state_machine.cc",
                 "src/file_parsing.cc",
+                "src/adapter.cc",
         ],
         hdrs = [
                 "include/state_machine.hh",
                 "include/file_parsing.hh",
                 "include/utilities.hh",
                 "include/action_space.hh",
+                "include/adapter.hh",
         ],
         strip_include_prefix = "include",
         copts = [
