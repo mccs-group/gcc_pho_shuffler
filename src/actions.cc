@@ -1,4 +1,7 @@
 #include "action_space.hh"
+#include <filesystem>
+
+std::filesystem::path lib_path;
 
 gcc_reorder::PassListGenerator gen;
 
@@ -6,8 +9,8 @@ gcc_reorder::PassListGenerator gen;
 void set_info_vec(int list_num)
 {
     gcc_reorder::PassLogParser log_parser;
-    log_parser.parse_log("../shuffler/unique_passes.txt");
-    std::vector constraints_vec = {"../shuffler/lists/constraints1.txt", "../shuffler/lists/constraints2.txt", "../shuffler/lists/constraints3.txt"};
+    log_parser.parse_log(lib_path / "unique_passes.txt");
+    std::vector constraints_vec = {lib_path /  "lists/constraints1.txt", lib_path / "lists/constraints2.txt", lib_path / "lists/constraints3.txt"};
     std::vector<std::pair<unsigned long, unsigned long>> start_prop(3, {0, 0});
 
     unsigned long custom_ending_constraint = 0;
@@ -50,16 +53,16 @@ void init(int list_num)
 {
     gcc_reorder::PassToReorderParser pass_parser;
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle1.txt");
+    pass_parser.parse_passes_file(lib_path / "lists/to_shuffle1.txt");
     gen.set_list1(pass_parser.begin(), pass_parser.end());
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle2.txt");
+    pass_parser.parse_passes_file(lib_path / "lists/to_shuffle2.txt");
     gen.set_list2(pass_parser.begin(), pass_parser.end());
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle3.txt");
+    pass_parser.parse_passes_file(lib_path / "lists/to_shuffle3.txt");
     gen.set_list3(pass_parser.begin(), pass_parser.end());
 
-    pass_parser.parse_passes_file("../shuffler/lists/to_shuffle4.txt");
+    pass_parser.parse_passes_file(lib_path / "lists/to_shuffle4.txt");
     gen.set_list4_subpasses(pass_parser.begin(), pass_parser.end());
 
     set_info_vec(list_num);
@@ -137,4 +140,9 @@ extern "C" char** make_valid_pass_seq(char** pass_seq, int size, int list_num, s
 
     return gen.make_valid_pass_seq(pass_seq, size, list_num, size_ptr);
 
+}
+
+extern "C" void set_path(char* path)
+{
+    lib_path = std::filesystem::path{path}.parent_path();
 }
