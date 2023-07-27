@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdlib>
 #include "utilities.hh"
+#include <stack>
 
 namespace gcc_reorder
 {
@@ -71,51 +72,20 @@ struct PropertyStateMachine
 
 class PassListGenerator
 {
-    std::vector<pass_info> info_vec_;
     std::unordered_map<std::string, int> name_to_id_map_; // we give each pass an id and work with ids to avoid needless heap indirection
     std::unordered_map<int, std::string> id_to_name;
 
     std::unordered_map<int, pass_prop> pass_to_properties_; // hash map: pass id -> it's properties
 
-    std::unordered_map<std::string, int> pass_to_list_num;
-
-    std::vector<std::pair<unsigned long, unsigned long>> start_properties = { {76079 | 130760, 0}, {76079, 0}, {76079, 0}, {130760, 0} };
-    std::vector<std::pair<unsigned long, unsigned long>> end_properties = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
-
     PropertyStateMachine state;
-    std::vector<char*> action_space;
 
-    bool in_loop = false;
-
-    std::vector<char*> list1;
-    std::vector<char*> list2;
-    std::vector<char*> list3;
-    std::vector<char*> all_lists;
-    std::vector<char*> loop_action_space;
+    std::vector<std::string> correct_action_space;
+    std::vector<int> full_action_space_;
 
 public:
-    int starting_list = -1;
-    int current_list = -1;
+    std::vector<pass_info> info_vec_;
 
-    static constexpr int MAX_PASS_AMOUNT = 400;
-    static constexpr int MAX_PASS_LENGTH = 40;
-
-    PassListGenerator() : action_space(MAX_PASS_AMOUNT, 0)
-    {
-        auto&& allocate = [](char* ptr){ return new char[MAX_PASS_LENGTH]{0}; };
-        std::transform(action_space.begin(), action_space.end(), action_space.begin(), allocate);
-    }
-
-    ~PassListGenerator()
-    {
-        auto&& delete_lambda = [](char* ptr){ delete ptr; return nullptr; };
-        std::transform(action_space.begin(), action_space.end(), action_space.begin(), delete_lambda);
-
-        std::transform(list1.begin(), list1.end(), list1.begin(), delete_lambda);
-        std::transform(list2.begin(), list2.end(), list2.begin(), delete_lambda);
-        std::transform(list3.begin(), list3.end(), list3.begin(), delete_lambda);
-        std::transform(loop_action_space.begin(), loop_action_space.end(), loop_action_space.begin(), delete_lambda);
-    }
+    PassListGenerator() = default;
 
     template <typename iter_info>
     PassListGenerator(iter_info begin_info, iter_info end_info) :
@@ -131,52 +101,33 @@ public:
     }
 
     template <typename iter>
-    void set_list1(iter begin, iter end)
+    void set_full_action_space_vec(iter begin, iter end)
     {
-        init_internal_vec(list1, begin, end);
+        full_action_space_ = {begin, end};
     }
 
-    template <typename iter>
-    void set_list2(iter begin, iter end)
+    template <typename iter_in, typename iter_out>
+    void map_onto_id(iter_in input_begin, iter_in input_end, iter_out output_begin)
     {
-        init_internal_vec(list2, begin, end);
-    }
-
-    template <typename iter>
-    void set_list3(iter begin, iter end)
-    {
-        init_internal_vec(list3, begin, end);
-    }
-
-    template <typename iter>
-    void set_list4_subpasses(iter begin, iter end)
-    {
-        init_internal_vec(loop_action_space, begin, end);
+        auto&& mapper = [this](const std::string& str){ return name_to_id_map_[str]; };
+        std::transform(input_begin, input_end, output_begin, mapper);
     }
 
     // map passes' names onto ids and batches of passes onto ids
     void setup_structures();
 
-    void change_list(const std::vector<std::pair<unsigned long, unsigned long>>& vec);
-
-    char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full,
-                                int size_applied, int list_num, size_t* size_ptr);
-
-    int valid_pass_seq(char** pass_seq, int size, int list_num);
-    char** make_valid_pass_seq(char** pass_seq, int size, int list_num, size_t* size_ptr);
-
-    int get_pass_list(char* pass_name);
-
-private:
-
-    template<typename iter>
-    char** get_action_space_helper(iter begin, iter end, unsigned long original_state, unsigned long custom_state, size_t* size_ptr)
+    template <typename iter>
+    void get_new_action_space(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop)
     {
-        int new_size = 0;
-        // std::cout << std::endl << "State: " << ' ' << original_state << ' ' << custom_state << std::endl;
-        for (; begin != end; begin++)
+        correct_action_space.clear();
+        set_state(begin, end, start_prop);
+
+        const auto original_state = state.original_property_state;
+        const auto custom_state = state.custom_property_state;
+
+        for (auto&& pass : full_action_space_)
         {
-            auto&& both_props = pass_to_properties_[name_to_id_map_.at(std::string(*begin))];
+            auto&& both_props = pass_to_properties_[pass];
 
             auto&& original_required = both_props.original.required;
             auto&& custom_required = both_props.custom.required;
@@ -185,7 +136,7 @@ private:
 
             if (((original_required & original_state) == original_required) && ((custom_required & custom_state) == custom_required))
             {
-                std::copy(*begin, *begin + strlen(*begin) + 1, action_space[new_size++]);
+                correct_action_space.push_back(id_to_name[pass]);
             }
             // else
             // {
@@ -193,22 +144,85 @@ private:
             // }
 
         }
-        *size_ptr = new_size;
-
-        return action_space.data();
     }
 
     template <typename iter>
-    void init_internal_vec(std::vector<char*>& to_init, iter begin, iter end)
+    void set_state(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop)
     {
-        to_init.resize(end - begin);
+        state.passes_.clear();
+        state.original_property_state = start_prop.first;
+        state.custom_property_state = start_prop.second;
 
-        for (int i = 0; begin != end; begin++, i++)
+        for (; begin != end; begin++)
         {
-            to_init[i] = new char[MAX_PASS_LENGTH]{0};
-            std::copy(begin->begin(), begin->end(), to_init[i]);
+            state.apply_pass(*begin);
         }
     }
+
+    template <typename iter>
+    int valid_pass_seq(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop, unsigned long ending_state)
+    {
+        state.passes_.clear();
+        state.original_property_state = start_prop.first;
+        state.custom_property_state = start_prop.second;
+
+        auto&& bad_pass = std::find_if(begin, end, [this](int pass_id){ return state.apply_pass(pass_id) != 0;});
+
+        if (bad_pass != end)
+        {
+            return bad_pass - begin + 1;
+        }
+
+        if ((state.custom_property_state & ending_state) != ending_state)
+            return end - begin;
+
+        return 0;
+    }
+
+    template<typename iter>
+    void make_valid_pass_seq(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop, unsigned long ending_state)
+    {
+        correct_action_space.clear();
+        state.original_property_state = start_prop.first;
+        state.custom_property_state = start_prop.second;
+
+        for (; begin != end; begin++)
+        {
+            correct_action_space.push_back(id_to_name[*begin]);
+            state.apply_pass(*begin);
+        }
+
+        std::stack<std::string> passes;
+
+        auto ending_state_diff = ending_state & (~state.custom_property_state);
+        auto&& necessary_pass_finder = [&ending_state_diff](const pass_info& info){return (info.prop.custom.provided & ending_state_diff) == ending_state_diff && 
+                                                                                            (info.prop.custom.destroyed & ending_state_diff) != ending_state_diff;};
+
+        while (ending_state_diff != 0)
+        {
+            auto&& pass_info_it = std::find_if(info_vec_.begin(), info_vec_.end(), necessary_pass_finder);
+            passes.push(pass_info_it->name);
+
+            ending_state_diff = pass_info_it->prop.custom.required & (~state.custom_property_state);
+        }
+
+        for (int i = 0; !passes.empty(); i++)
+        {
+            correct_action_space.push_back(passes.top());
+            passes.pop();
+        }
+    }
+
+
+    using iterator = std::vector<std::string>::iterator;
+    using const_iterator = std::vector<std::string>::const_iterator;
+
+    iterator begin() { return correct_action_space.begin(); }
+    iterator end() { return correct_action_space.end(); }
+    const_iterator begin() const { return correct_action_space.begin(); }
+    const_iterator end() const { return correct_action_space.end(); }
+    const_iterator cbegin() { return correct_action_space.cbegin(); }
+    const_iterator cend() { return correct_action_space.cend(); }
 };
 
 } // namespace gcc_reorder

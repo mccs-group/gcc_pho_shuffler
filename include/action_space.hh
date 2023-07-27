@@ -1,7 +1,7 @@
 #ifndef ACTION_SPACE_HH
 #define ACTION_SPACE_HH
 
-#include "state_machine.hh"
+#include "adapter.hh"
 #include "file_parsing.hh"
 
 extern "C" char** get_new_action_space(const char** full_action_space, const char** applied_passes, int size_full, 
