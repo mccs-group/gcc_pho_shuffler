@@ -88,7 +88,15 @@ int PassListGenerator::valid_pass_seq(char** pass_seq, int size, int list_num)
     state.original_property_state = start_properties[list_num].first;
     state.custom_property_state = start_properties[list_num].second;
 
-    char** bad = std::find_if(pass_seq, pass_seq + size, [this](char* str){ return state.apply_pass(name_to_id_map_[std::string{str}]) != 0;});
+    auto&& finder = [this](char* str)
+    {
+        if (auto it = name_to_id_map_.find(std::string{str}); it != name_to_id_map_.end())
+            return state.apply_pass(it->second) != 0;
+
+        return false;
+    };
+
+    char** bad = std::find_if(pass_seq, pass_seq + size, finder);
 
     if (bad != pass_seq + size)
     {

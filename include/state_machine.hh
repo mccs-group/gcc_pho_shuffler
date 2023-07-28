@@ -33,8 +33,12 @@ struct PropertyStateMachine
     num_to_prop_(num_to_prop)
     {}
 
+    static constexpr int EMPTY_PASS = -10;
+
     int apply_pass(int pass)
     {
+        if (pass == EMPTY_PASS)
+            return 0;
         passes_.push_back(pass);
         pass_prop pass_prop = num_to_prop_.at(pass);
 
