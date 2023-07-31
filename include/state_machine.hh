@@ -170,7 +170,15 @@ public:
         state.original_property_state = start_prop.first;
         state.custom_property_state = start_prop.second;
 
-        auto&& bad_pass = std::find_if(begin, end, [this](int pass_id){ return state.apply_pass(pass_id) != 0;});
+        auto&& finder = [this](int pass_id)
+        {
+            if (pass_id == 0)
+                return false;
+
+            return state.apply_pass(pass_id) != 0;
+        };
+
+        auto&& bad_pass = std::find_if(begin, end, finder);
 
         if (bad_pass != end)
         {
@@ -190,23 +198,23 @@ public:
         {
             if ((*(++loop2_it) != name_to_id_map_["loop2_init"]) || (*(++loop2_it) != name_to_id_map_["loop2_invariant"]))
             {
-                std::cerr << "could not find init or invariant" << std::endl;
+                // std::cerr << "could not find init or invariant" << std::endl;
                 return loop2_it - begin + 1;
             }
 
             auto&& loop2_done_it = std::find(loop2_it, end, name_to_id_map_["loop2_done"]);
             if (loop2_done_it == end)
             {
-                std::cerr << "could not find done" << std::endl;
+                // std::cerr << "could not find done" << std::endl;
                 return loop2_it - begin + 1;
             }
 
             auto&& not_loop2_finder = [this](int pass_id){return !(pass_id == name_to_id_map_["loop2_unroll"] || pass_id == name_to_id_map_["loop2_doloop"]); };
             if (auto&& not_loop2 = std::find_if(++loop2_it, loop2_done_it, not_loop2_finder); not_loop2 != loop2_done_it)
             {
-                std::cerr << id_to_name[*loop2_done_it] << std::endl;
-                std::cerr << id_to_name[*not_loop2] << std::endl;
-                std::cerr << std::boolalpha << (loop2_done_it == not_loop2) << std::endl;
+                // std::cerr << id_to_name[*loop2_done_it] << std::endl;
+                // std::cerr << id_to_name[*not_loop2] << std::endl;
+                // std::cerr << std::boolalpha << (loop2_done_it == not_loop2) << std::endl;
                 return not_loop2 - begin + 1;
             }
         }
