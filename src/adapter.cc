@@ -55,7 +55,8 @@ void PassListGenAdapter::setup()
 void PassListGenAdapter::change_current_list_num(int list_num)
 {
     log_parser.parse_log(path_to_dir / "unique_passes.txt");
-    std::vector constraints_vec = {path_to_dir / "lists/constraints1.txt", path_to_dir /  "lists/constraints2.txt", path_to_dir / "lists/constraints3.txt"};
+    std::vector constraints_vec = {path_to_dir / "lists/constraints1.txt", path_to_dir /  "lists/constraints2.txt",
+                                   path_to_dir / "lists/constraints3.txt"};
 
     custom_properties = {0, 0};
     std::vector<unsigned long> ending_prop(3, 0);
@@ -212,6 +213,10 @@ int PassListGenAdapter::valid_pass_seq(char** pass_seq, int size, int list_num)
 
     std::vector<int> passes(size, 0);
     gen.map_onto_id(pass_seq, pass_seq + size, passes.begin());
+
+    if(list_num == 3)
+        if (int loop2_invalid = gen.check_loop2(passes.begin(), passes.end()); loop2_invalid != 0)
+            return loop2_invalid;
 
     return gen.valid_pass_seq(passes.begin(), passes.end(), {start_original_properties[list_num], custom_properties.first}, custom_properties.second);
 }

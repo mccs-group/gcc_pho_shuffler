@@ -34,8 +34,12 @@ struct PropertyStateMachine
     num_to_prop_(num_to_prop)
     {}
 
+    static constexpr int EMPTY_PASS = -10;
+
     int apply_pass(int pass)
     {
+        if (pass == EMPTY_PASS)
+            return 0;
         passes_.push_back(pass);
         pass_prop pass_prop = num_to_prop_.at(pass);
 
@@ -175,6 +179,39 @@ public:
 
         if ((state.custom_property_state & ending_state) != ending_state)
             return end - begin;
+
+        return 0;
+    }
+
+    template <typename iter>
+    int check_loop2(iter begin, iter end)
+    {
+        if (auto&& loop2_it = std::find(begin, end, name_to_id_map_["loop2"]); loop2_it != end)
+        {
+            if ((*(++loop2_it) != name_to_id_map_["loop2_init"]) || (*(++loop2_it) != name_to_id_map_["loop2_invariant"]))
+            {
+                std::cerr << "could not find init or invariant" << std::endl;
+                return loop2_it - begin + 1;
+            }
+
+            auto&& loop2_done_it = std::find(loop2_it, end, name_to_id_map_["loop2_done"]);
+            if (loop2_done_it == end)
+            {
+                std::cerr << "could not find done" << std::endl;
+                return loop2_it - begin + 1;
+            }
+
+            auto&& not_loop2_finder = [this](int pass_id){return !(pass_id == name_to_id_map_["loop2_unroll"] || pass_id == name_to_id_map_["loop2_doloop"]); };
+            if (auto&& not_loop2 = std::find_if(++loop2_it, loop2_done_it, not_loop2_finder); not_loop2 != loop2_done_it)
+            {
+                std::cerr << id_to_name[*loop2_done_it] << std::endl;
+                std::cerr << id_to_name[*not_loop2] << std::endl;
+                std::cerr << std::boolalpha << (loop2_done_it == not_loop2) << std::endl;
+                return not_loop2 - begin + 1;
+            }
+        }
+        else
+            return end - begin + 1;
 
         return 0;
     }
