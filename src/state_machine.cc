@@ -46,7 +46,7 @@ void PassListGenerator::generate_prop_passes_map()
 {
     auto&& unique_requirements = get_unique_requirements();
 
-    for (auto&& pass_it : to_shuffle)
+    for (auto&& pass_it : given_sequence)
     {
         for (auto&& requirement_it : unique_requirements)
         {
@@ -68,13 +68,13 @@ int PassListGenerator::shuffle_pass_order(const std::pair<unsigned long, unsigne
     //
     // There is a flag fail_if_not_all_passes_used, which determines, whether the generation o sequence fails alltogether, if all sequence with all
     // passes could be generated, or just the last sequence is left as resulting
-    for (int i = 0; (i < TRY_AMOUNT) && (state.passes_.size() != to_shuffle.size()); i++)
+    for (int i = 0; (i < TRY_AMOUNT) && (state.passes_.size() != given_sequence.size()); i++)
     {
         // clear the previously generated sequence if there was one
         // and generate all necessary maps
         state.passes_.clear();
         unique_requirement_to_passes_.clear();
-        shuffled.clear();
+        generated_sequence.clear();
         generate_prop_passes_map();
 
         state.original_property_state = initial_property_state.first;
@@ -86,7 +86,7 @@ int PassListGenerator::shuffle_pass_order(const std::pair<unsigned long, unsigne
         std::vector<int> passes_to_choose_from;
         passes_to_choose_from.reserve(MAX_PASS_AMOUNT); // we reserve enough space, to avoid unnecessary reallocations
 
-        for (int i = 0; i < int(to_shuffle.size()); i++)
+        for (int i = 0; i < int(given_sequence.size()); i++)
         {
             auto&& property_state = std::pair{state.original_property_state, state.custom_property_state};
 
@@ -133,10 +133,10 @@ int PassListGenerator::shuffle_pass_order(const std::pair<unsigned long, unsigne
         }
     }
 
-    if ((state.passes_.size() != to_shuffle.size()))
+    if ((state.passes_.size() != given_sequence.size()))
         return -1; // if could not generate sequence with all passes and flag to fail in this scenario is set
 
-    shuffled = std::move(state.passes_);
+    generated_sequence = std::move(state.passes_);
 
     return 0;
 }

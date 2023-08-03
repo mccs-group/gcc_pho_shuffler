@@ -72,26 +72,26 @@ int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
     {
         case 1:
                 passes_id.resize(list1.size());
-                gen.map_onto_id(list1.begin(), list1.end(), passes_id.begin());
+                gen.map_names_onto_id(list1.begin(), list1.end(), passes_id.begin());
                 break;
         case 2:
                 std::copy_if(list2.begin(), list2.end(), std::back_inserter(list2_without_loop), not_loop);
                 passes_id.resize(list2_without_loop.size());
-                gen.map_onto_id(list2_without_loop.begin(), list2_without_loop.end(), passes_id.begin());
+                gen.map_names_onto_id(list2_without_loop.begin(), list2_without_loop.end(), passes_id.begin());
                 break;
         case 3:
 
                 std::copy_if(list3.begin(), list3.end(), std::back_inserter(list3_without_loop2), not_loop2_subpasses);
                 passes_id.resize(list3_without_loop2.size());
-                gen.map_onto_id(list3_without_loop2.begin(), list3_without_loop2.end(), passes_id.begin());
+                gen.map_names_onto_id(list3_without_loop2.begin(), list3_without_loop2.end(), passes_id.begin());
                 break;
         case 4:
                 passes_id.resize(list3.size());
-                gen.map_onto_id(list3.begin(), list3.end(), passes_id.begin());
+                gen.map_names_onto_id(list3.begin(), list3.end(), passes_id.begin());
                 break;
         case 0:
                 passes_id.resize(all_lists.size());
-                gen.map_onto_id(all_lists.begin(), all_lists.end(), passes_id.begin());
+                gen.map_names_onto_id(all_lists.begin(), all_lists.end(), passes_id.begin());
                 break;
         default:
                 std::cerr << "Unknown list num " << list_num << std::endl;
@@ -99,7 +99,7 @@ int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
                 return nullptr;
     }
 
-    gen.to_shuffle = std::move(passes_id);
+    gen.set_start_seq(passes_id.begin(), passes_id.end());
     int result = gen.shuffle_pass_order({start_original_properties[list_num], custom_properties.first}, {0, custom_properties.second});
 
     if (result == -1)
@@ -108,7 +108,7 @@ int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
         return nullptr;
     }
 
-    shuffled_passes_id = std::move(gen.shuffled);
+    shuffled_passes_id = {gen.begin(), gen.end()};
 
     *size_ptr = shuffled_passes_id.size();
 
@@ -212,7 +212,7 @@ char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int
     if (in_loop)
     {
         action_space_ids.resize(loop_action_space.size());
-        gen.map_onto_id(loop_action_space.begin(), loop_action_space.end(), action_space_ids.begin());
+        gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), action_space_ids.begin());
     }
     else
     {
@@ -220,19 +220,19 @@ char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int
         {
             case 1:
                     action_space_ids.resize(list1.size());
-                    gen.map_onto_id(list1.begin(), list1.end(), action_space_ids.begin());
+                    gen.map_names_onto_id(list1.begin(), list1.end(), action_space_ids.begin());
                     break;
             case 2:
                     action_space_ids.resize(list2.size());
-                    gen.map_onto_id(list2.begin(), list2.end(), action_space_ids.begin());
+                    gen.map_names_onto_id(list2.begin(), list2.end(), action_space_ids.begin());
                     break;
             case 3:
                     action_space_ids.resize(list3.size());
-                    gen.map_onto_id(list3.begin(), list3.end(), action_space_ids.begin());
+                    gen.map_names_onto_id(list3.begin(), list3.end(), action_space_ids.begin());
                     break;
             case 0:
                     action_space_ids.resize(all_lists.size());
-                    gen.map_onto_id(all_lists.begin(), all_lists.end(), action_space_ids.begin());
+                    gen.map_names_onto_id(all_lists.begin(), all_lists.end(), action_space_ids.begin());
                     break;
             default:
                     std::cerr << "Unknown list num " << list_num << std::endl;
@@ -243,11 +243,11 @@ char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int
     }
 
 
-    gen.set_full_action_space_vec(action_space_ids.begin(), action_space_ids.end());
+    gen.set_start_seq(action_space_ids.begin(), action_space_ids.end());
 
     std::vector<int> applied_passes_ids;
     applied_passes_ids.resize(size_applied);
-    gen.map_onto_id(applied_passes, applied_passes + size_applied, applied_passes_ids.begin());
+    gen.map_names_onto_id(applied_passes, applied_passes + size_applied, applied_passes_ids.begin());
 
     // for (auto&& it : applied_passes_ids)
     //     std::cout << it << std::endl;
@@ -255,7 +255,9 @@ char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int
     gen.get_new_action_space(applied_passes_ids.begin(), applied_passes_ids.end(), {start_original_properties[list_num], custom_properties.first});
 
     int new_size = 0;
-    for (auto&& it : gen)
+    std::vector<std::string> new_action_space;
+    gen.map_id_onto_names(gen.begin(), gen.end(), std::back_inserter(new_action_space));
+    for (auto&& it : new_action_space)
     {
         std::copy(it.c_str(), it.c_str() + it.size() + 1, buf[new_size].data());
         buf_to_return.push_back(buf[new_size].data());
@@ -282,7 +284,7 @@ int PassListGenAdapter::valid_pass_seq(char** pass_seq, int size, int list_num)
         change_current_list_num(list_num);
 
     std::vector<int> passes(size, 0);
-    gen.map_onto_id(pass_seq, pass_seq + size, passes.begin());
+    gen.map_names_onto_id(pass_seq, pass_seq + size, passes.begin());
 
     if(list_num == 3)
         if (int loop2_invalid = gen.check_loop2(passes.begin(), passes.end()); loop2_invalid != 0)
@@ -298,11 +300,13 @@ char** PassListGenAdapter::make_valid_pass_seq(char** pass_seq, int size, int li
 
     buf_to_return.clear();
     std::vector<int> current_seq(size, 0);
-    gen.map_onto_id(pass_seq, pass_seq + size, current_seq.begin());
+    gen.map_names_onto_id(pass_seq, pass_seq + size, current_seq.begin());
 
     gen.make_valid_pass_seq(current_seq.begin(), current_seq.end(), {start_original_properties[list_num], custom_properties.first}, custom_properties.second);
 
-    for (auto&& it : gen)
+    std::vector<std::string> valid_seq;
+    gen.map_id_onto_names(gen.begin(), gen.end(), std::back_inserter(valid_seq));
+    for (auto&& it : valid_seq)
     {
         buf_to_return.push_back(const_cast<char*>(it.c_str()));
         // std::cout << it << std::endl;
