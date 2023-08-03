@@ -52,14 +52,77 @@ void PassListGenAdapter::setup()
     std::for_each(buf.begin(), buf.end(), [](std::vector<char>& vec){vec.resize(MAX_PASS_LENGTH, 0);});
 }
 
+int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
+{
+    if (list_num != current_list_num)
+        change_current_list_num(list_num);
+
+    std::vector<int> passes_id;
+
+    const std::vector<std::string> loop2_subpasses = {"loop2_init", "loop2_invariant", "loop2_unroll", "loop2_doloop", "loop2_done"};
+    std::vector<std::string> list3_without_loop2;
+
+    auto&& not_loop2_subpasses = [begin = loop2_subpasses.begin(), end = loop2_subpasses.end()]
+                                    (const std::string& str){return std::find(begin, end, str) == end;};
+
+    std::vector<std::string> list2_without_loop;
+    auto&& not_loop = [](const std::string& str){return str != "loop";};
+
+    switch (list_num)
+    {
+        case 1:
+                passes_id.resize(list1.size());
+                gen.map_onto_id(list1.begin(), list1.end(), passes_id.begin());
+                break;
+        case 2:
+                std::copy_if(list2.begin(), list2.end(), std::back_inserter(list2_without_loop), not_loop);
+                passes_id.resize(list2_without_loop.size());
+                gen.map_onto_id(list2_without_loop.begin(), list2_without_loop.end(), passes_id.begin());
+                break;
+        case 3:
+
+                std::copy_if(list3.begin(), list3.end(), std::back_inserter(list3_without_loop2), not_loop2_subpasses);
+                passes_id.resize(list3_without_loop2.size());
+                gen.map_onto_id(list3_without_loop2.begin(), list3_without_loop2.end(), passes_id.begin());
+                break;
+        case 4:
+                passes_id.resize(list3.size());
+                gen.map_onto_id(list3.begin(), list3.end(), passes_id.begin());
+                break;
+        case 0:
+                passes_id.resize(all_lists.size());
+                gen.map_onto_id(all_lists.begin(), all_lists.end(), passes_id.begin());
+                break;
+        default:
+                std::cerr << "Unknown list num " << list_num << std::endl;
+                *size_ptr = 0;
+                return nullptr;
+    }
+
+    gen.to_shuffle = std::move(passes_id);
+    int result = gen.shuffle_pass_order({start_original_properties[list_num], custom_properties.first}, {0, custom_properties.second});
+
+    if (result == -1)
+    {
+        *size_ptr = 0;
+        return nullptr;
+    }
+
+    shuffled_passes_id = std::move(gen.shuffled);
+
+    *size_ptr = shuffled_passes_id.size();
+
+    return shuffled_passes_id.data();
+}
+
 void PassListGenAdapter::change_current_list_num(int list_num)
 {
     log_parser.parse_log(path_to_dir / "unique_passes.txt");
-    std::vector constraints_vec = {path_to_dir / "lists/constraints1.txt", path_to_dir /  "lists/constraints2.txt",
-                                   path_to_dir / "lists/constraints3.txt"};
+    std::vector constraints_vec = {path_to_dir / "lists/constraints1.txt", path_to_dir / "lists/constraints2.txt",
+                                   path_to_dir / "lists/constraints3.txt", path_to_dir / "lists/constraints4.txt"};
 
     custom_properties = {0, 0};
-    std::vector<unsigned long> ending_prop(3, 0);
+    std::vector<unsigned long> ending_prop(4, 0);
 
     if (list_num == 0)
     {
@@ -81,15 +144,16 @@ void PassListGenAdapter::change_current_list_num(int list_num)
         custom_properties = log_parser.parse_constraints(constraints_vec[list_num - 1], 0);
     }
 
-    for (auto&& it : log_parser)
-    {
-    if (pass_to_list_num.find(it.name) != pass_to_list_num.end())
-        for (int j = 0; j < pass_to_list_num.at(it.name) - 1; j++)
+    if (list_num != 4)
+        for (auto&& it : log_parser)
         {
-            // std::cout << "Adding to " << it.name << ' ' << start_end_prop[j].second <<  std::endl;
-            it.prop.custom.required |= ending_prop[j];
+            if (pass_to_list_num.find(it.name) != pass_to_list_num.end())
+                for (int j = 0; j < pass_to_list_num.at(it.name) - 1; j++)
+                {
+                    // std::cout << "Adding to " << it.name << ' ' << start_end_prop[j].second <<  std::endl;
+                    it.prop.custom.required |= ending_prop[j];
+                }
         }
-    }
 
     gen.set_info_vec(log_parser.begin(), log_parser.end());
     gen.setup_structures();
@@ -102,7 +166,7 @@ void PassListGenAdapter::change_current_list_num(int list_num)
 
 char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int size_applied, int list_num, size_t* size_ptr)
 {
-    if (list_num != current_list_num)
+    if (list_num != current_list_num && !((list_num == 2) && (current_list_num == 4)))
         change_current_list_num(list_num);
 
     buf_to_return.clear();
@@ -132,10 +196,16 @@ char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int
         }
 
         if (!std::strcmp(applied_passes[size_applied - 1], "loopinit"))
+        {
+            change_current_list_num(4);
             in_loop = true;
+        }
 
         if (!std::strcmp(applied_passes[size_applied - 1], "loopdone"))
+        {
+            change_current_list_num(2);
             in_loop = false;
+        }
     }
 
     std::vector<int> action_space_ids;

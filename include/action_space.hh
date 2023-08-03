@@ -15,4 +15,6 @@ extern "C" char** make_valid_pass_seq(char** pass_seq, int size, int list_num, s
 
 extern "C" void set_path(char* path);
 
+extern "C" int* get_shuffled_list(int list_num, size_t* size_ptr);
+
 #endif

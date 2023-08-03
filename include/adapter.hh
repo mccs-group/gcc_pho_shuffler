@@ -26,6 +26,8 @@ class PassListGenAdapter
     std::vector<std::vector<char>> buf;
     std::vector<char*> buf_to_return;
 
+    std::vector<int> shuffled_passes_id;
+
     int current_list_num = -1;
     int starting_list_num = -1;
     PassListGenerator gen;
@@ -39,6 +41,8 @@ public:
     void set_path_to_dir(const std::filesystem::path& path) { path_to_dir = path;}
 
     char** get_new_action_space(const char** applied_passes, int size_applied, int list_num, size_t* size_ptr);
+
+    int* get_shuffled_list(int list_num, size_t* size_ptr);
 
     int get_pass_list(char* pass_name);
 

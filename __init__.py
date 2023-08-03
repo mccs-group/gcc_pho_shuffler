@@ -31,12 +31,20 @@ def setuplib(name : pathlib.Path):
     lib.set_path.argtypes = [ctypes.c_char_p]
     lib.set_path.restype = None
 
+    lib.get_shuffled_list.argtypes = [ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
+    lib.get_shuffled_list.restype = ctypes.POINTER(ctypes.c_int32)
+
     lib.set_path(str(name).encode())
 
     return lib
 
 def get_pass_list(lib, name : str):
     return int(lib.get_pass_list(name.encode()))
+
+def get_shuffled_list(lib, list_num: int):
+    size = ctypes.c_size_t()
+    arr = lib.get_shuffled_list(list_num, size)
+    return arr[:size.value]
 
 
 # receives lib object, action list from previous step (could be empty), used list(could be empty), and number of list from which to take passes

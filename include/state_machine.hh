@@ -81,12 +81,19 @@ class PassListGenerator
 
     std::unordered_map<int, pass_prop> pass_to_properties_; // hash map: pass id -> it's properties
 
+    std::unordered_map<std::pair<unsigned long, unsigned long>, std::vector<int>> unique_requirement_to_passes_;
+
     PropertyStateMachine state;
 
     std::vector<std::string> correct_action_space;
     std::vector<int> full_action_space_;
 
+    static constexpr int TRY_AMOUNT = 1e4;
+    static constexpr int MAX_PASS_AMOUNT = 400;
+
 public:
+    std::vector<int> to_shuffle;
+    std::vector<int> shuffled;
     std::vector<pass_info> info_vec_;
 
     PassListGenerator() = default;
@@ -233,6 +240,13 @@ public:
             passes.pop();
         }
     }
+
+    std::unordered_set<std::pair<unsigned long, unsigned long>> get_unique_requirements();
+
+    void generate_prop_passes_map();
+
+    int shuffle_pass_order(const std::pair<unsigned long, unsigned long>& initial_property_state,
+                           const std::pair<unsigned long, unsigned long>& ending_property_state);
 
 
     using iterator = std::vector<std::string>::iterator;
