@@ -2,6 +2,7 @@ import ctypes
 import pathlib
 import random
 import time
+import os
 
 # prepares python list of strings for c function
 def make_c_array(lst):
@@ -12,7 +13,9 @@ def make_list(arr, size):
     return [elem.decode() for elem in arr[:size.value]]
 
 # returns a lib object, which is necessary for the rest of the functions
-def setuplib(name : pathlib.Path):
+def setuplib(name = None):
+    if (name == None):
+        name = os.path.dirname(__file__) + "/libactions.so"
     lib = ctypes.CDLL(str(name))
     lib.get_new_action_space.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32,
                                             ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
