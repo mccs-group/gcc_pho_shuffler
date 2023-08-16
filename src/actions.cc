@@ -29,6 +29,14 @@ extern "C" int* get_shuffled_list(int list_num, size_t* size_ptr)
     return adapter.get_shuffled_list(list_num, size_ptr);
 }
 
+extern "C" void set_include_used(int flag)
+{
+    if (flag == 0)
+        adapter.set_include_used(false);
+    else
+        adapter.set_include_used(true);
+}
+
 extern "C" void set_path(char* path)
 {
     adapter.set_path_to_dir(std::filesystem::path{path}.parent_path());

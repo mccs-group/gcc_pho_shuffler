@@ -93,6 +93,9 @@ class PassListGenerator
     static constexpr int MAX_PASS_AMOUNT = 400;
 
 public:
+    bool include_used = false;
+
+public:
 
     PassListGenerator() = default;
 
@@ -150,7 +153,8 @@ public:
 
             // std::cout << "Checking " << std::string(*begin) << " with " << original_required << ' ' << custom_required << std::endl;
 
-            if (((original_required & original_state) == original_required) && ((custom_required & custom_state) == custom_required))
+            if (((original_required & original_state) == original_required) && ((custom_required & custom_state) == custom_required)
+                && (include_used || (std::find(begin, end, pass) == end)))
             {
                 generated_sequence.push_back(pass);
             }

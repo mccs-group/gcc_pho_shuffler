@@ -50,6 +50,8 @@ public:
 
     char** make_valid_pass_seq(char** pass_seq, int size, int list_num, size_t* size_ptr);
 
+    void set_include_used(bool flag) {gen.include_used = flag;}
+
     static constexpr int MAX_PASS_AMOUNT = 400;
     static constexpr int MAX_PASS_LENGTH = 40;
 private:

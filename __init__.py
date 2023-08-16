@@ -37,9 +37,18 @@ def setuplib(name = None):
     lib.get_shuffled_list.argtypes = [ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
     lib.get_shuffled_list.restype = ctypes.POINTER(ctypes.c_int32)
 
+    lib.set_include_used.argtypes = [ctypes.c_int32]
+    lib.set_include_used.restype = None
+
     lib.set_path(str(name).encode())
 
     return lib
+
+def set_include_used(lib, flag):
+    if (flag):
+        lib.set_include_used(1)
+    else:
+        lib.set_include_used(0)
 
 def get_pass_list(lib, name : str):
     return int(lib.get_pass_list(name.encode()))

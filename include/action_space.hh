@@ -13,6 +13,8 @@ extern "C" int valid_pass_seq(char** pass_seq, int size, int list_num);
 
 extern "C" char** make_valid_pass_seq(char** pass_seq, int size, int list_num, size_t* size_ptr);
 
+extern "C" void set_include_used(int flag);
+
 extern "C" void set_path(char* path);
 
 extern "C" int* get_shuffled_list(int list_num, size_t* size_ptr);
