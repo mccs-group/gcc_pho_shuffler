@@ -15,6 +15,10 @@ class PassListGenAdapter
     static constexpr std::array<unsigned long, 5> start_original_properties = { 76079 | 130760, 76079, 76079, 130760, 126255};
     std::pair<unsigned long, unsigned long> custom_properties = {0, 0};
 
+    static constexpr unsigned long IN_LOOP_SECOND_LIST_PROP = 8;
+    static constexpr unsigned long FIX_LOOP_INDICATOR = 32;
+    static constexpr unsigned long PRE_INDICATOR = 2;
+
     std::vector<std::string> list1;
     std::vector<std::string> list2;
     std::vector<std::string> list3;
@@ -55,6 +59,8 @@ public:
     char** get_action_space_by_property(std::pair<unsigned long, unsigned long> property_state, int list_num, size_t* size_ptr);
 
     char** get_list_by_list_num(int list_num, size_t* size_ptr);
+
+    int if_in_loop(unsigned long custom_prop);
 
     std::pair<unsigned long, unsigned long> get_property_by_history(char** pass_seq, int size, int list_num);
 

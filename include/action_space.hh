@@ -25,4 +25,7 @@ extern "C" char** get_list_by_list_num(int list_num, size_t* size_ptr);
 
 extern "C" void get_property_by_history(char** pass_seq, int size, int list_num, size_t* orig_ptr, size_t* custom_ptr);
 
+extern "C" int if_in_loop(size_t custom_prop);
+
+
 #endif

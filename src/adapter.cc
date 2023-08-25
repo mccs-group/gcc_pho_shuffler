@@ -167,7 +167,7 @@ void PassListGenAdapter::change_current_list_num(int list_num)
 char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long, unsigned long> property_state, int list_num, size_t* size_ptr)
 {
     buf_to_return.clear();
-    if (property_state.second & 8)
+    if (property_state.second & IN_LOOP_SECOND_LIST_PROP)
     {
         for (auto&& it : loop_action_space)
         {
@@ -198,6 +198,12 @@ char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long,
 
 }
 
+int PassListGenAdapter::if_in_loop(unsigned long custom_prop)
+{
+    if (custom_prop & IN_LOOP_SECOND_LIST_PROP)
+        return 1;
+    return 0;
+}
 
 char** PassListGenAdapter::get_list_by_list_num(int list_num, size_t* size_ptr)
 {

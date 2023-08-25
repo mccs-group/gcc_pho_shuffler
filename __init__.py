@@ -49,6 +49,9 @@ def setuplib(name = None):
     lib.set_include_used.argtypes = [ctypes.c_int32]
     lib.set_include_used.restype = None
 
+    lib.if_in_loop.argtypes = [ctypes.c_size_t]
+    lib.if_in_loop.restype = ctypes.c_int32
+
     lib.set_path(str(name).encode())
 
     return lib
@@ -83,6 +86,8 @@ def get_property_by_history(lib, pass_history, list_num):
     lib.get_property_by_history(make_c_array(pass_history), len(pass_history), list_num, ctypes.byref(orig), ctypes.byref(custom))
     return (orig, custom)
 
+def in_loop(lib, custom_prop):
+    return lib.if_in_loop(custom_prop)
 
 # receives lib object, action list from previous step (could be empty), used list(could be empty), and number of list from which to take passes
 # returns a list of available passes

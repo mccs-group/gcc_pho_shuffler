@@ -61,3 +61,9 @@ extern "C" void set_path(char* path)
     adapter.setup();
 }
 
+
+int if_in_loop(size_t custom_prop)
+{
+    return adapter.if_in_loop(custom_prop);
+}
+
