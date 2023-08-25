@@ -72,7 +72,7 @@ def get_shuffled_list(lib, list_num: int):
 
 def get_action_space_by_property(lib, list_num, property_state_orig, property_state_custom):
     size = ctypes.c_size_t()
-    arr = lib.get_action_space_by_property(property_state_orig, property_state_custom, list_num, ctypes.byref(size))
+    arr = lib.get_action_space_by_property(ctypes.c_size_t(property_state_orig), ctypes.c_size_t(property_state_custom), list_num, ctypes.byref(size))
     return make_list(arr, size)
 
 def get_list_by_list_num(lib, list_num):
@@ -84,7 +84,7 @@ def get_property_by_history(lib, pass_history, list_num):
     orig = ctypes.c_size_t()
     custom = ctypes.c_size_t()
     lib.get_property_by_history(make_c_array(pass_history), len(pass_history), list_num, ctypes.byref(orig), ctypes.byref(custom))
-    return (orig, custom)
+    return (orig.value, custom.value)
 
 def in_loop(lib, custom_prop):
     return lib.if_in_loop(custom_prop)
