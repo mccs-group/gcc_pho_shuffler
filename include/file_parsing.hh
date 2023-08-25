@@ -31,6 +31,7 @@ class PassLogParser : public FileReader
     std::vector<pass_info> info_vec_;
 
 public:
+    static constexpr int PROPERTY_BIT_DISPLACEMENT = 20;
     // parses log with information about passes' property restrictions from the gcc itself
     void parse_log(const std::string& info_file_name);
 

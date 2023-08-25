@@ -58,6 +58,26 @@ void PassListGenerator::generate_prop_passes_map()
     }
 }
 
+void PassListGenerator::get_action_space_by_property(const std::pair<unsigned long, unsigned long>& prop_state)
+{
+    state.passes_.clear();
+    generated_sequence.clear();
+    state.original_property_state = prop_state.first;
+    state.custom_property_state = prop_state.second;
+    // std::cout << prop_state.first << " " << prop_state.second << std::endl;
+    for (auto&& pass : given_sequence)
+    {
+        // awful hardcode because of couple awful passes in gcc, which can be done only once on a function
+        if ((id_to_name[pass] == "pre") && ((prop_state.second & pass_to_properties_[pass].custom.provided) == pass_to_properties_[pass].custom.provided))
+            continue;
+        if ((id_to_name[pass] == "fix_loops") && (((prop_state.second & pass_to_properties_[pass].custom.provided) != 0)))
+            continue;
+
+        if (state.can_be_applied(pass))
+            generated_sequence.push_back(pass);
+    }
+}
+
 int PassListGenerator::shuffle_pass_order(const std::pair<unsigned long, unsigned long>& initial_property_state,
                                           const std::pair<unsigned long, unsigned long>& ending_property_state)
 {

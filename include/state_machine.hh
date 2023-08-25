@@ -36,29 +36,37 @@ struct PropertyStateMachine
 
     static constexpr int EMPTY_PASS = -10;
 
+    bool can_be_applied(int pass)
+    {
+        if (pass == EMPTY_PASS)
+            return true;
+        pass_prop pass_property = num_to_prop_.at(pass);
+
+        return can_be_applied(pass, pass_property);
+    }
+
     int apply_pass(int pass)
     {
         if (pass == EMPTY_PASS)
             return 0;
         passes_.push_back(pass);
-        pass_prop pass_prop = num_to_prop_.at(pass);
+        pass_prop pass_property = num_to_prop_.at(pass);
 
-        if (((original_property_state & pass_prop.original.required) != pass_prop.original.required) ||
-            ((custom_property_state & pass_prop.custom.required) != pass_prop.custom.required))
+        if (!can_be_applied(pass, pass_property))
         {
             return -1;
         }
 
-        custom_property_state |= pass_prop.custom.provided;
-        custom_property_state &= ~pass_prop.custom.destroyed;
+        custom_property_state |= pass_property.custom.provided;
+        custom_property_state &= ~pass_property.custom.destroyed;
 
-        original_property_state |= pass_prop.original.provided;
-        original_property_state &= ~pass_prop.original.destroyed;
+        original_property_state |= pass_property.original.provided;
+        original_property_state &= ~pass_property.original.destroyed;
 
         return 0;
     }
 
-       int revert_applying(int pass)
+    int revert_applying(int pass)
     {
         pass_prop pass_prop = num_to_prop_.at(pass);
 
@@ -69,6 +77,18 @@ struct PropertyStateMachine
         original_property_state &= ~pass_prop.original.provided;
 
         return 0;
+    }
+
+private:
+    bool can_be_applied(int pass, const pass_prop property)
+    {
+        if (((original_property_state & property.original.required) != property.original.required) ||
+            ((custom_property_state & property.custom.required) != property.custom.required))
+        {
+            // std::cout << "rejected " << pass << std::endl;
+            return false;
+        }
+        return true;
     }
 
 };
@@ -125,6 +145,11 @@ public:
         std::transform(input_begin, input_end, output_begin, mapper);
     }
 
+    int map_name_onto_id(const std::string& str)
+    {
+        return name_to_id_map_[str];
+    }
+
     template <typename iter_in, typename iter_out>
     void map_id_onto_names(iter_in input_begin, iter_in input_end, iter_out output_begin)
     {
@@ -139,7 +164,7 @@ public:
     void get_new_action_space(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop)
     {
         generated_sequence.clear();
-        set_state(begin, end, start_prop);
+        get_prop_state(begin, end, start_prop);
 
         const auto original_state = state.original_property_state;
         const auto custom_state = state.custom_property_state;
@@ -167,7 +192,7 @@ public:
     }
 
     template <typename iter>
-    void set_state(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop)
+    std::pair<unsigned long, unsigned long> get_prop_state(iter begin, iter end, const std::pair<unsigned long, unsigned long>& start_prop)
     {
         state.passes_.clear();
         state.original_property_state = start_prop.first;
@@ -177,6 +202,7 @@ public:
         {
             state.apply_pass(*begin);
         }
+        return {state.original_property_state, state.custom_property_state};
     }
 
     template <typename iter>
@@ -253,6 +279,8 @@ public:
     std::unordered_set<std::pair<unsigned long, unsigned long>> get_unique_requirements();
 
     void generate_prop_passes_map();
+
+    void get_action_space_by_property(const std::pair<unsigned long, unsigned long>& prop_state);
 
     int shuffle_pass_order(const std::pair<unsigned long, unsigned long>& initial_property_state,
                            const std::pair<unsigned long, unsigned long>& ending_property_state);

@@ -29,6 +29,24 @@ extern "C" int* get_shuffled_list(int list_num, size_t* size_ptr)
     return adapter.get_shuffled_list(list_num, size_ptr);
 }
 
+char** get_action_space_by_property(unsigned long orig_prop_state, unsigned long custom_prop_state, int list_num, size_t* size_ptr)
+{
+    return adapter.get_action_space_by_property({orig_prop_state, custom_prop_state}, list_num, size_ptr);
+}
+
+char** get_list_by_list_num(int list_num, size_t* size_ptr)
+{
+    return adapter.get_list_by_list_num(list_num, size_ptr);
+}
+
+void get_property_by_history(char** pass_seq, int size, int list_num, size_t* orig_ptr, size_t* custom_ptr)
+{
+    auto prop_pair = adapter.get_property_by_history(pass_seq, size, list_num);
+    *orig_ptr = prop_pair.first;
+    *custom_ptr = prop_pair.second;
+}
+
+
 extern "C" void set_include_used(int flag)
 {
     if (flag == 0)
@@ -42,3 +60,4 @@ extern "C" void set_path(char* path)
     adapter.set_path_to_dir(std::filesystem::path{path}.parent_path());
     adapter.setup();
 }
+

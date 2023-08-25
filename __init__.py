@@ -31,6 +31,15 @@ def setuplib(name = None):
     lib.make_valid_pass_seq.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
     lib.make_valid_pass_seq.restype = ctypes.POINTER(ctypes.c_char_p)
 
+    lib.get_action_space_by_property.argtypes = [ctypes.c_size_t, ctypes.c_size_t, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
+    lib.get_action_space_by_property.restype = ctypes.POINTER(ctypes.c_char_p)
+
+    lib.get_list_by_list_num.argtypes = [ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t)]
+    lib.get_list_by_list_num.restype = ctypes.POINTER(ctypes.c_char_p)
+
+    lib.get_property_by_history.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int32, ctypes.c_int32, ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(ctypes.c_size_t)]
+    lib.get_property_by_history.restype = None
+
     lib.set_path.argtypes = [ctypes.c_char_p]
     lib.set_path.restype = None
 
@@ -55,8 +64,24 @@ def get_pass_list(lib, name : str):
 
 def get_shuffled_list(lib, list_num: int):
     size = ctypes.c_size_t()
-    arr = lib.get_shuffled_list(list_num, size)
+    arr = lib.get_shuffled_list(list_num, ctypes.byref(size))
     return arr[:size.value]
+
+def get_action_space_by_property(lib, list_num, property_state_orig, property_state_custom):
+    size = ctypes.c_size_t()
+    arr = lib.get_action_space_by_property(property_state_orig, property_state_custom, list_num, ctypes.byref(size))
+    return make_list(arr, size)
+
+def get_list_by_list_num(lib, list_num):
+    size = ctypes.c_size_t()
+    arr = lib.get_list_by_list_num(list_num, ctypes.byref(size))
+    return make_list(arr, size)
+
+def get_property_by_history(lib, pass_history, list_num):
+    orig = ctypes.c_size_t()
+    custom = ctypes.c_size_t()
+    lib.get_property_by_history(make_c_array(pass_history), len(pass_history), list_num, ctypes.byref(orig), ctypes.byref(custom))
+    return (orig, custom)
 
 
 # receives lib object, action list from previous step (could be empty), used list(could be empty), and number of list from which to take passes

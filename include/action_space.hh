@@ -19,4 +19,10 @@ extern "C" void set_path(char* path);
 
 extern "C" int* get_shuffled_list(int list_num, size_t* size_ptr);
 
+extern "C" char** get_action_space_by_property(unsigned long orig_prop_state, unsigned long custom_prop_state, int list_num, size_t* size_ptr);
+
+extern "C" char** get_list_by_list_num(int list_num, size_t* size_ptr);
+
+extern "C" void get_property_by_history(char** pass_seq, int size, int list_num, size_t* orig_ptr, size_t* custom_ptr);
+
 #endif

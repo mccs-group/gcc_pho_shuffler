@@ -41,7 +41,6 @@ pre
 sink
 dce
 fix_loops
-loop
 veclower2
 printf-return-value
 reassoc

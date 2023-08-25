@@ -86,8 +86,8 @@ int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
                 gen.map_names_onto_id(list3_without_loop2.begin(), list3_without_loop2.end(), passes_id.begin());
                 break;
         case 4:
-                passes_id.resize(list3.size());
-                gen.map_names_onto_id(list3.begin(), list3.end(), passes_id.begin());
+                passes_id.resize(loop_action_space.size());
+                gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), passes_id.begin());
                 break;
         case 0:
                 passes_id.resize(all_lists.size());
@@ -139,7 +139,7 @@ void PassListGenAdapter::change_current_list_num(int list_num)
         }
         custom_properties.second = current_list_custom_prop.second;
     }
-    else
+    else if (list_num != 4)
     {
         custom_properties = log_parser.parse_constraints(constraints_vec[list_num - 1], 0);
     }
@@ -162,6 +162,91 @@ void PassListGenAdapter::change_current_list_num(int list_num)
         starting_list_num = list_num;
 
     current_list_num = list_num;
+}
+
+char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long, unsigned long> property_state, int list_num, size_t* size_ptr)
+{
+    buf_to_return.clear();
+    if (property_state.second & 8)
+    {
+        for (auto&& it : loop_action_space)
+        {
+            // loopinit must be added immediately after fix_loops by the user himself
+            if (it == "loopinit")
+                continue;
+
+            buf_to_return.push_back(it.data());
+        }
+        *size_ptr = buf_to_return.size();
+        return buf_to_return.data();
+    }
+
+    if (list_num != current_list_num)
+        change_current_list_num(list_num);
+
+    std::vector<int> action_space_ids;
+    action_space_ids.reserve(MAX_PASS_AMOUNT);
+    set_start_list(list_num, std::back_inserter(action_space_ids));
+    gen.set_start_seq(action_space_ids.begin(), action_space_ids.end());
+
+    gen.get_action_space_by_property({property_state.first, property_state.second << (list_num - 1) * PassLogParser::PROPERTY_BIT_DISPLACEMENT });
+
+    set_pass_names_vec(gen.begin(), gen.end());
+    *size_ptr = buf_to_return.size();
+
+    return buf_to_return.data();
+
+}
+
+
+char** PassListGenAdapter::get_list_by_list_num(int list_num, size_t* size_ptr)
+{
+    buf_to_return.clear();
+    switch (list_num)
+    {
+        case 1:
+            std::transform(list1.begin(), list1.end(), std::back_inserter(buf_to_return), [](std::string& str){return str.data();});
+            break;
+
+        case 2:
+            std::transform(list2.begin(), list2.end(), std::back_inserter(buf_to_return), [](std::string& str){return str.data();});
+            std::transform(++loop_action_space.begin(), loop_action_space.end(), std::back_inserter(buf_to_return), [](std::string& str){return str.data();});
+            break;
+
+        case 3:
+            std::transform(list3.begin(), list3.end(), std::back_inserter(buf_to_return), [](std::string& str){return str.data();});
+            break;
+
+        default:
+            break;
+    }
+
+    *size_ptr = buf_to_return.size();
+    return buf_to_return.data();
+}
+
+std::pair<unsigned long, unsigned long> PassListGenAdapter::get_property_by_history(char** applied, int size, int list_num)
+{
+    if (list_num != current_list_num)
+        change_current_list_num(list_num);
+
+    std::vector<int> applied_passes_ids;
+    applied_passes_ids.reserve(size);
+    gen.map_names_onto_id(applied, applied + size, std::back_inserter(applied_passes_ids));
+
+    auto fix_loops_id = gen.map_name_onto_id("fix_loops");
+
+    if (auto fix_loops_it = std::find(applied_passes_ids.begin(), applied_passes_ids.end(), fix_loops_id); fix_loops_it != applied_passes_ids.end())
+    {
+        auto loopdone_it = std::find(applied_passes_ids.begin(), applied_passes_ids.end(), gen.map_name_onto_id("loopdone"));
+        applied_passes_ids.erase(++fix_loops_it, loopdone_it);
+    }
+
+    auto&& [orig, custom] = gen.get_prop_state(applied_passes_ids.begin(), applied_passes_ids.end(), {start_original_properties[list_num], custom_properties.first});
+
+    custom = custom >> ((list_num - 1) * PassLogParser::PROPERTY_BIT_DISPLACEMENT);
+
+    return {orig, custom};
 }
 
 char** PassListGenAdapter::get_new_action_space(const char** applied_passes, int size_applied, int list_num, size_t* size_ptr)

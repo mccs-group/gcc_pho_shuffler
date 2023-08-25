@@ -67,7 +67,7 @@ std::pair<unsigned long, unsigned long> PassLogParser::parse_constraints(const s
     auto&& file_name = std::string{path_to_file.filename()};
     auto&& list_num = *std::find_if(file_name.begin(), file_name.end(), [](char c){return std::isdigit(c);} ) - '0';
 
-    unsigned long bit_displacement = (list_num - 1) * 20;
+    unsigned long bit_displacement = (list_num - 1) * PROPERTY_BIT_DISPLACEMENT;
 
     if (file_content_buf.empty())
         return {0, 0};
