@@ -70,6 +70,21 @@ public:
 private:
 
     template <typename iter>
+    int verify_sub_loops(iter begin, iter end)
+    {
+        std::vector<int> passes(loop_action_space.size(), 0);
+        gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), passes.begin());
+        auto loop_subpass = [&pass_vec = passes](int pass_id){ return std::find(pass_vec.begin(), pass_vec.end(), pass_id) != pass_vec.end(); };
+
+        auto non_loop_subpass_it = std::find_if_not(begin, end, loop_subpass);
+
+        if (non_loop_subpass_it != end)
+            return std::distance(begin, non_loop_subpass_it);
+
+        return 0;
+    }
+
+    template <typename iter>
     void set_pass_names_vec(iter begin, iter end)
     {
         int new_size = 0;

@@ -224,11 +224,11 @@ public:
 
         if (bad_pass != end)
         {
-            return bad_pass - begin + 1;
+            return std::distance(begin, bad_pass) + 1;
         }
 
         if ((state.custom_property_state & ending_state) != ending_state)
-            return end - begin;
+            return std::distance(begin, end);
 
         return 0;
     }

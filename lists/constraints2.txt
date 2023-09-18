@@ -14,7 +14,13 @@ veclower2 0 0 1
 cddce 0 0 1
 
 fix_loops 2 40 0
-loopdone 0 0 8
+loopinit 8 0 0
+ivcanon 8 0 0
+ivopts 8 0 0
+*record_bounds 8 0 0
+cunroll 8 0 0
+sccp 8 0 0
+loopdone 8 0 8
 
 vrp 0 0 16
 dce 0 16 0

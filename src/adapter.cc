@@ -377,6 +377,13 @@ int PassListGenAdapter::valid_pass_seq(char** pass_seq, int size, int list_num)
     std::vector<int> passes(size, 0);
     gen.map_names_onto_id(pass_seq, pass_seq + size, passes.begin());
 
+    if (auto loop_it = std::find(passes.begin(), passes.end(), gen.map_name_onto_id("loop")); (loop_it != passes.end()))
+    {
+        ++loop_it;
+        if (int non_sub_loop_pass = verify_sub_loops(loop_it, std::find(loop_it, passes.end(), gen.map_name_onto_id("loopdone"))); non_sub_loop_pass != 0)
+            return non_sub_loop_pass + std::distance(passes.begin(), loop_it) + 1;
+    }
+
     if(list_num == 3)
         if (int loop2_invalid = gen.check_loop2(passes.begin(), passes.end()); loop2_invalid != 0)
             return loop2_invalid;
