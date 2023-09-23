@@ -381,7 +381,7 @@ int PassListGenAdapter::valid_pass_seq(char** pass_seq, int size, int list_num)
     {
         ++loop_it;
         if (int non_sub_loop_pass = verify_sub_loops(loop_it, std::find(loop_it, passes.end(), gen.map_name_onto_id("loopdone"))); non_sub_loop_pass != 0)
-            return non_sub_loop_pass + std::distance(passes.begin(), loop_it) + 1;
+            return non_sub_loop_pass + std::distance(passes.begin(), loop_it);
     }
 
     if(list_num == 3)
