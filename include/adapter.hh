@@ -96,7 +96,6 @@ private:
 
         if (non_loop_subpass_it != loopdone_it)
         {
-            std::cout << *non_loop_subpass_it << std::endl;
             return std::distance(begin, non_loop_subpass_it) + 1;
         }
 
