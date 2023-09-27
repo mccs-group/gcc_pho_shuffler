@@ -49,6 +49,9 @@ def setuplib(name = None):
     lib.set_include_used.argtypes = [ctypes.c_int32]
     lib.set_include_used.restype = None
 
+    lib.set_check_loop.argtypes = [ctypes.c_int32]
+    lib.set_check_loop.restype = None
+
     lib.if_in_loop.argtypes = [ctypes.c_size_t]
     lib.if_in_loop.restype = ctypes.c_int32
 
@@ -61,6 +64,12 @@ def set_include_used(lib, flag):
         lib.set_include_used(1)
     else:
         lib.set_include_used(0)
+
+def set_check_loop(lib, flag):
+    if (flag):
+        lib.set_check_loop(1)
+    else:
+        lib.set_check_loop(0)
 
 def get_pass_list(lib, name : str):
     return int(lib.get_pass_list(name.encode()))

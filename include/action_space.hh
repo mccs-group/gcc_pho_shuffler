@@ -27,5 +27,7 @@ extern "C" void get_property_by_history(char** pass_seq, int size, int list_num,
 
 extern "C" int if_in_loop(size_t custom_prop);
 
+extern "C" void set_check_loop(int flag);
+
 
 #endif

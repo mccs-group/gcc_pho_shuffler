@@ -40,11 +40,14 @@ class PassListGenAdapter
     PassLogParser log_parser;
 
     bool in_loop = false;
+    bool check_in_loop = true;
 
 public:
     void setup();
 
     void set_path_to_dir(const std::filesystem::path& path) { path_to_dir = path;}
+
+    void set_check_in_loop(bool flag) { check_in_loop = flag;}
 
     char** get_new_action_space(const char** applied_passes, int size_applied, int list_num, size_t* size_ptr);
 
@@ -74,15 +77,28 @@ private:
     template <typename iter>
     int verify_sub_loops(iter begin, iter end)
     {
-        std::vector<int> passes(loop_action_space.size(), 0);
-        gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), passes.begin());
+        auto loop_it = std::find(begin, end, gen.map_name_onto_id("fix_loops"));
+        if (loop_it == end)
+            return 0;
 
-        auto loop_subpass = [&pass_vec = passes](int pass_id){ return std::find(pass_vec.begin(), pass_vec.end(), pass_id) != pass_vec.end(); };
+        ++loop_it; // jump to next to check
+        if ((loop_it != end) && (*loop_it == gen.map_name_onto_id("loop"))) // if next is loop, jump to next to check
+            ++loop_it;
 
-        auto non_loop_subpass_it = std::find_if_not(begin, end, loop_subpass);
+        auto loopdone_it = std::find(loop_it, end, gen.map_name_onto_id("loopdone"));
 
-        if (non_loop_subpass_it != end)
+        std::vector<int> sub_loop_passes(loop_action_space.size(), 0);
+        gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), sub_loop_passes.begin());
+
+        auto loop_subpass = [&pass_vec = sub_loop_passes](int pass_id){ return std::find(pass_vec.begin(), pass_vec.end(), pass_id) != pass_vec.end(); };
+
+        auto non_loop_subpass_it = std::find_if_not(loop_it, loopdone_it, loop_subpass);
+
+        if (non_loop_subpass_it != loopdone_it)
+        {
+            std::cout << *non_loop_subpass_it << std::endl;
             return std::distance(begin, non_loop_subpass_it) + 1;
+        }
 
         return 0;
     }

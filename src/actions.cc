@@ -49,7 +49,7 @@ void get_property_by_history(char** pass_seq, int size, int list_num, size_t* or
 
 extern "C" void set_include_used(int flag)
 {
-    if (flag == 0)
+    if (!flag)
         adapter.set_include_used(false);
     else
         adapter.set_include_used(true);
@@ -61,6 +61,13 @@ extern "C" void set_path(char* path)
     adapter.setup();
 }
 
+void set_check_loop(int flag)
+{
+    if (!flag)
+        adapter.set_check_in_loop(false);
+    else
+        adapter.set_check_in_loop(true);
+}
 
 int if_in_loop(size_t custom_prop)
 {
