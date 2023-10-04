@@ -173,7 +173,7 @@ hsa 0 0 0
 emutls 40 0 0
 sched_fusion 0 0 0
 recip 32 0 0
-profile_estimate 0 0 0
+profile_estimate2 0 0 0
 mach 0 0 0
 cp 0 0 0
 cdtor 0 0 0

@@ -1,7 +1,7 @@
 5
 *rebuild_cgraph_edges 0 1 0
 inline_param 5 2 4
-einline 3 4 1
+einline 3 20 1
 fnsplit 0 0 1
 *remove_cgraph_callee_edges 0 0 1
 evrp 0 0 1
@@ -10,7 +10,10 @@ forwprop 0 0 1
 ccp 0 0 1
 cddce 0 0 1
 
+esra 16 32 0
+profile_estimate 16 0 0
+
 fre 8 0 0
 ccp 0 8 0
 
-end_state 1
+end_state 33
