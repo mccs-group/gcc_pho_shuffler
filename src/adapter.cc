@@ -175,6 +175,9 @@ char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long,
             if (it == "loopinit")
                 continue;
 
+            if (it == "copyprop" && ((property_state.second & 1) != 1))
+                continue;
+
             buf_to_return.push_back(it.data());
         }
         *size_ptr = buf_to_return.size();
