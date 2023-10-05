@@ -9,6 +9,9 @@ fre 0 0 1
 forwprop 0 0 1
 ccp 0 0 1
 cddce 0 0 1
+tailr 0 0 1
+dse 0 0 1
+switchconv 0 0 1
 
 esra 16 32 0
 profile_estimate 16 0 0

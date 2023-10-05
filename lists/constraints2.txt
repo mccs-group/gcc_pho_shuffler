@@ -12,7 +12,10 @@ phicprop 0 0 1
 thread 0 0 1
 veclower2 0 0 1
 cddce 0 0 1
+cunrolli 0 0 1
+forwprop 0 0 1
 
+sink 2 0 0
 fix_loops 2 40 0
 loopinit 8 0 0
 ivcanon 8 0 0
