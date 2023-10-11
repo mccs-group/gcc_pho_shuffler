@@ -86,8 +86,8 @@ int* PassListGenAdapter::get_shuffled_list(int list_num, size_t* size_ptr)
                 gen.map_names_onto_id(list3_without_loop2.begin(), list3_without_loop2.end(), passes_id.begin());
                 break;
         case 4:
-                passes_id.resize(loop_action_space.size());
-                gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), passes_id.begin());
+                passes_id.resize(loop_action_space.size() - 1);
+                gen.map_names_onto_id(++loop_action_space.begin(), loop_action_space.end(), passes_id.begin());
                 break;
         case 0:
                 passes_id.resize(all_lists.size());

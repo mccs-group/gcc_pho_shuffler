@@ -12,11 +12,13 @@ cddce 0 0 1
 tailr 0 0 1
 dse 0 0 1
 switchconv 0 0 1
+objsz 0 0 1
 
 esra 16 32 0
 profile_estimate 16 0 0
 
-fre 8 0 0
 ccp 0 8 0
+fre 24 64 0
+tailr 64 0 0
 
 end_state 33
