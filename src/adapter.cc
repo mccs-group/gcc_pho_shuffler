@@ -167,29 +167,17 @@ void PassListGenAdapter::change_current_list_num(int list_num)
 char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long, unsigned long> property_state, int list_num, size_t* size_ptr)
 {
     buf_to_return.clear();
-    if ((property_state.second & IN_LOOP_SECOND_LIST_PROP) == IN_LOOP_SECOND_LIST_PROP)
-    {
-        for (auto&& it : loop_action_space)
-        {
-            // loopinit must be added immediately after fix_loops by the user himself
-            if (it == "loopinit")
-                continue;
-
-            if (it == "copyprop" && ((property_state.second & 1) != 1))
-                continue;
-
-            buf_to_return.push_back(it.data());
-        }
-        *size_ptr = buf_to_return.size();
-        return buf_to_return.data();
-    }
 
     if (list_num != current_list_num)
         change_current_list_num(list_num);
 
     std::vector<int> action_space_ids;
     action_space_ids.reserve(MAX_PASS_AMOUNT);
-    set_start_list(list_num, std::back_inserter(action_space_ids));
+    if ((property_state.second & IN_LOOP_SECOND_LIST_PROP) == IN_LOOP_SECOND_LIST_PROP)
+        set_start_list(4, std::back_inserter(action_space_ids));
+    else
+        set_start_list(list_num, std::back_inserter(action_space_ids));
+
     gen.set_start_seq(action_space_ids.begin(), action_space_ids.end());
 
     gen.get_action_space_by_property({property_state.first, property_state.second << (list_num - 1) * PassLogParser::PROPERTY_BIT_DISPLACEMENT });
@@ -242,14 +230,6 @@ std::pair<unsigned long, unsigned long> PassListGenAdapter::get_property_by_hist
     std::vector<int> applied_passes_ids;
     applied_passes_ids.reserve(size);
     gen.map_names_onto_id(applied, applied + size, std::back_inserter(applied_passes_ids));
-
-    auto fix_loops_id = gen.map_name_onto_id("fix_loops");
-
-    if (auto fix_loops_it = std::find(applied_passes_ids.begin(), applied_passes_ids.end(), fix_loops_id); fix_loops_it != applied_passes_ids.end())
-    {
-        auto loopdone_it = std::find(applied_passes_ids.begin(), applied_passes_ids.end(), gen.map_name_onto_id("loopdone"));
-        applied_passes_ids.erase(++fix_loops_it, loopdone_it);
-    }
 
     auto&& [orig, custom] = gen.get_prop_state(applied_passes_ids.begin(), applied_passes_ids.end(), {start_original_properties[list_num], custom_properties.first});
 

@@ -134,7 +134,7 @@ private:
                     gen.map_names_onto_id(list3.begin(), list3.end(), output);
                     break;
             case 4:
-                    gen.map_names_onto_id(loop_action_space.begin(), loop_action_space.end(), output);
+                    gen.map_names_onto_id(++loop_action_space.begin(), loop_action_space.end(), output);
                     break;
             case 0:
                     gen.map_names_onto_id(all_lists.begin(), all_lists.end(), output);
