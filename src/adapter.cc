@@ -173,7 +173,7 @@ char** PassListGenAdapter::get_action_space_by_property(std::pair<unsigned long,
 
     std::vector<int> action_space_ids;
     action_space_ids.reserve(MAX_PASS_AMOUNT);
-    if ((property_state.second & IN_LOOP_SECOND_LIST_PROP) == IN_LOOP_SECOND_LIST_PROP)
+    if ((list_num == 2) && ((property_state.second & IN_LOOP_SECOND_LIST_PROP) == IN_LOOP_SECOND_LIST_PROP))
         set_start_list(4, std::back_inserter(action_space_ids));
     else
         set_start_list(list_num, std::back_inserter(action_space_ids));
