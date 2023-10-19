@@ -29,6 +29,7 @@ loopdone 8 0 8
 
 cplxlower 0 128 0
 bswap 64 0 0
+sra 64 0 0
 
 vrp 0 0 16
 dce 0 16 0

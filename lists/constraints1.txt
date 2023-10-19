@@ -13,6 +13,7 @@ tailr 0 0 1
 dse 0 0 1
 switchconv 0 0 1
 objsz 0 0 1
+eipa_sra 0 0 1
 
 esra 16 32 0
 profile_estimate 16 0 0
